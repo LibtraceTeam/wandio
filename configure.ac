@@ -211,11 +211,35 @@ AS_IF([test "x$have_lzma" = "xyes"], [
 	with_lzma=no]
 )
 
+AC_ARG_WITH([http],
+        AC_HELP_STRING([--with-http], [build with support for reading files over http (using libcurl)]))
+
+AS_IF([test "x$with_http" != "xno"],
+        [
+        # we need curl_easy_pause which was added in 7.18.0
+        AC_CHECK_LIB(curl, curl_easy_pause, have_curl=yes, have_curl=no)
+	], [have_curl=no])
+
+AS_IF([test "x$have_curl" = "xyes"], [
+        if test "$ac_cv_lib_curl_curl_easy_pause" != "none required"; then
+                LIBWANDIO_LIBS="$LIBWANDIO_LIBS -lcurl"
+        fi
+        AC_DEFINE(HAVE_HTTP, 1, "Compiled with http support")
+        with_http=yes],
+
+
+        [AS_IF([test "x$with_http" = "xyes"],
+                [AC_MSG_ERROR([http requested but libcurl (> 7.18.0) not found])])
+        AC_DEFINE(HAVE_HTTP, 0, "Compiled with http support")
+        with_http=no]
+)
+
 # Define automake conditionals for use in our Makefile.am files
 AM_CONDITIONAL([HAVE_BZLIB], [test "x$with_bzip2" != "xno"])
 AM_CONDITIONAL([HAVE_ZLIB], [test "x$with_zlib" != "xno"])
 AM_CONDITIONAL([HAVE_LZO], [ test "x$with_lzo" != "xno"])
 AM_CONDITIONAL([HAVE_LZMA], [ test "x$with_lzma" != "xno"])
+AM_CONDITIONAL([HAVE_HTTP], [ test "x$with_http" != "xno"])
 
 # Set all our output variables
 AC_SUBST([LIBWANDIO_LIBS])
@@ -251,4 +275,4 @@ reportopt "Compiled with compressed file (zlib) support" $with_zlib
 reportopt "Compiled with compressed file (bz2) support" $with_bzip2
 reportopt "Compiled with compressed file (lzo write only) support" $with_lzo
 reportopt "Compiled with compressed file (lzma) support" $with_lzma
-
+reportopt "Compiled with http read (libcurl) support" $with_http
