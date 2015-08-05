@@ -3,11 +3,11 @@
 # Now you only need to update the version number in two places - below,
 # and in the README
 
-AC_INIT([wandio],[3.0.22],[contact@wand.net.nz],[wandio])
+AC_INIT([wandio],[1.0.2],[contact@wand.net.nz],[wandio])
 
-WANDIO_MAJOR=3
+WANDIO_MAJOR=1
 WANDIO_MID=0
-WANDIO_MINOR=22
+WANDIO_MINOR=2
 
 # OpenSolaris hides libraries like libncurses in /usr/gnu/lib, which is not
 # searched by default - add it to LDFLAGS so we at least have a chance of

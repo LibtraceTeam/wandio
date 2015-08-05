@@ -1,11 +1,10 @@
 /*
- * This file is part of libtrace
+ * This file is part of libwandio
  *
- * Copyright (c) 2007,2008,2009,2010 The University of Waikato, Hamilton, 
+ * Copyright (c) 2007-2015 The University of Waikato, Hamilton, 
  * New Zealand.
  *
- * Authors: Daniel Lawson 
- *          Perry Lorier
+ * Authors: Perry Lorier
  *          Shane Alcock 
  *          
  * All rights reserved.
@@ -13,21 +12,19 @@
  * This code has been developed by the University of Waikato WAND 
  * research group. For further information please see http://www.wand.net.nz/
  *
- * libtrace is free software; you can redistribute it and/or modify
+ * libwandio is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  *
- * libtrace is distributed in the hope that it will be useful,
+ * libwandio is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with libtrace; if not, write to the Free Software
+ * along with libwandio; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * $Id$
  *
  */
 
@@ -41,7 +38,7 @@
 #include <inttypes.h>
 #include <string.h>
 
-/* This file contains the implementation of the libtrace IO API, which format
+/* This file contains the implementation of the libwandio IO API, which format
  * modules should use to open, read from, write to, seek and close trace files.
  */
 
@@ -93,7 +90,7 @@ static void do_option(const char *option)
 	else if (strncmp(option,"buffers=",8) == 0)
 		max_buffers = atoi(option+8);
 	else {
-		fprintf(stderr,"Unknown libtraceio debug option '%s'\n", option);
+		fprintf(stderr,"Unknown libwandioio debug option '%s'\n", option);
 	}
 }
 
@@ -157,7 +154,7 @@ static io_t *create_io_reader(const char *filename, int autodetect)
 			DEBUG_PIPELINE("zlib");
 			io = zlib_open(io);
 #else
-			fprintf(stderr, "File %s is gzip compressed but libtrace has not been built with zlib support!\n", filename);
+			fprintf(stderr, "File %s is gzip compressed but libwandio has not been built with zlib support!\n", filename);
 			return NULL;
 #endif
 		}
@@ -167,7 +164,7 @@ static io_t *create_io_reader(const char *filename, int autodetect)
 			DEBUG_PIPELINE("zlib");
 			io = zlib_open(io);
 #else
-			fprintf(stderr, "File %s is compress(1) compressed but libtrace has not been built with zlib support!\n", filename);
+			fprintf(stderr, "File %s is compress(1) compressed but libwandio has not been built with zlib support!\n", filename);
 			return NULL;
 #endif
 		}
@@ -178,7 +175,7 @@ static io_t *create_io_reader(const char *filename, int autodetect)
 			DEBUG_PIPELINE("bzip");
 			io = bz_open(io);
 #else
-			fprintf(stderr, "File %s is bzip compressed but libtrace has not been built with bzip2 support!\n", filename);
+			fprintf(stderr, "File %s is bzip compressed but libwandio has not been built with bzip2 support!\n", filename);
 			return NULL;
 #endif
 		}
@@ -190,7 +187,7 @@ static io_t *create_io_reader(const char *filename, int autodetect)
                         DEBUG_PIPELINE("lzma");
                         io = lzma_open(io);
 #else
-                        fprintf(stderr, "File %s is lzma compressed but libtrace has not been built with lzma support!\n", filename);
+                        fprintf(stderr, "File %s is lzma compressed but libwandio has not been built with lzma support!\n", filename);
                         return NULL;
 #endif
                 }
