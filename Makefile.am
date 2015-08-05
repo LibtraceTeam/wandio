@@ -1,42 +1,13 @@
-SUBDIRS = . tools/wandiocat
+SUBDIRS = lib tools/wandiocat
 
-lib_LTLIBRARIES=libwandio.la
+ACLOCAL_AMFLAGS = -I m4
+AUTOMAKE_OPTIONS = 1.9 foreign
 
-include_HEADERS=wandio.h
+.PHONY: docs
 
-AM_CFLAGS=@LIBCFLAGS@ @CFLAG_VISIBILITY@
-AM_CXXFLAGS=@LIBCXXFLAGS@ @CFLAG_VISIBILITY@
-
-if HAVE_ZLIB
-LIBTRACEIO_ZLIB=ior-zlib.c iow-zlib.c
-else
-LIBTRACEIO_ZLIB=
-endif
-
-if HAVE_BZLIB
-LIBTRACEIO_BZLIB=ior-bzip.c iow-bzip.c
-else
-LIBTRACEIO_BZLIB=
-endif
-
-if HAVE_LZO
-LIBTRACEIO_LZO=iow-lzo.c
-else
-LIBTRACEIO_LZO=
-endif
-
-if HAVE_LZMA
-LIBTRACEIO_LZMA=ior-lzma.c iow-lzma.c
-else
-LIBTRACEIO_LZMA=
-endif
-
-libwandio_la_SOURCES=wandio.c ior-peek.c ior-stdio.c ior-thread.c \
-		iow-stdio.c iow-thread.c wandio.h wandio_internal.h \
-		$(LIBTRACEIO_ZLIB) $(LIBTRACEIO_BZLIB) $(LIBTRACEIO_LZO) \
-                $(LIBTRACEIO_LZMA)
-
-AM_CPPFLAGS = @ADD_INCLS@
-libwandio_la_LIBADD = @LIBWANDIO_LIBS@
-libwandio_la_LDFLAGS=-version-info 1:1:0 @ADD_LDFLAGS@
-
+bootstrap-clean:
+	$(RM) -f Makefile.in aclocal.m4 compile config.* \
+		configure depcomp install-sh ltmain.sh missing \
+		mkinstalldirs stamp-h.in \
+		lib/Makefile.in replace/libreplace.la  replace/Makefile.in
+	$(RM) -rf autom4te.cache/

@@ -1,0 +1,30 @@
+WANDIO 3.0.22
+
+---------------------------------------------------------------------------
+Copyright (c) 2007-2015 The University of Waikato, Hamilton, New Zealand.
+All rights reserved.
+
+This code has been developed by the University of Waikato WAND
+research group. For further information please see http://www.wand.net.nz/.
+---------------------------------------------------------------------------
+
+See INSTALL for instructions on how to install WANDIO.
+
+This directory contains source code for WANDIO, a library for reading from, and
+writing to, files. Depending on libraries available at compile time, WANDIO
+provides transparent compression/decompression for the following formats:
+ - zlib (gzip)
+ - bzip2
+ - lzo (write-only)
+ - lzma
+WANDIO also improves IO performance by performing compression/decompression in a
+separare thread (if pthreads are available).
+
+Bugs should be reported by either emailing contact@wand.net.nz or filing
+an issue at https://github.com/wanduow/wandio
+
+It is licensed under the GNU General Public License (GPL) version 2. Please
+see the included file GPL for details of this license.
+
+For further information, please contact the WAND group. See
+http://www.wand.net.nz/ for details.

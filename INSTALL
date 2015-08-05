@@ -1,0 +1,27 @@
+Requirements:
+ * >=automake-1.9
+
+
+Strongly recommended:
+ * zlib-dev
+
+----------------------------------
+
+Installing WANDIO:
+
+./bootstrap.sh (only if you've cloned the source from GitHub)
+./configure
+make
+make install
+
+The above series of commands will install wandio into /usr/local/lib. If
+you wish to install to a non-standard location, append the
+--prefix=DIR option to the ./configure command. ./configure also takes
+a number of other options - run ./configure --help to view a comprehensive
+list.
+
+You may need to add the library location (e.g. /usr/local/lib) to your
+/etc/ld.so.conf and run 'ldconfig' as root.
+
+
+
