@@ -79,7 +79,7 @@ static const int F_CS_MASK   = 0x00f00000L;
 
 static const int F_H_CRC32   = 0x00001000L;
 static const int F_ADLER32_D = 0x00000001L;
-static const int F_ADLER32_C = 0x00000002L;
+/*static const int F_ADLER32_C = 0x00000002L;*/
 
 /* popquiz! You throught "static const int" would be well constant didn't you?
  * You'd be wrong, you can't use them in places where the compiler needs a
@@ -237,9 +237,9 @@ static void *lzo_compress_thread(void *data)
 {
 	struct lzothread_t *me = (struct lzothread_t *)data;
 	int err;
-	char namebuf[17];
 
 #ifdef PR_SET_NAME
+	char namebuf[17];
 	if (prctl(PR_GET_NAME, namebuf, 0,0,0) == 0) {
 		char label[16];
 		namebuf[16] = '\0'; /* Make sure it's NUL terminated */
