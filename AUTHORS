@@ -4,6 +4,7 @@ The primary authors of libwandio were:
 
 Libwandio is currently maintained by Shane Alcock <salcock@waikato.ac.nz>.
 
-Thanks to Alistair King for numerous contributions, bug reports and being
-kind enough to take on the job of separating libwandio from libtrace.
+Thanks to Alistair King for numerous contributions (including the entirety
+of the HTTP reader), bug reports and being kind enough to take on the job of 
+separating libwandio from libtrace.
 

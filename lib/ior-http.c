@@ -1,11 +1,10 @@
 /*
  * This file is part of libwandio
  *
- * Copyright (c) 2007,2008,2009,2010 The University of Waikato, Hamilton,
+ * Copyright (c) 2007-2015 The University of Waikato, Hamilton,
  * New Zealand.
  *
- * Authors: Daniel Lawson
- *          Perry Lorier
+ * Authors: Perry Lorier
  *          Shane Alcock
  *          Alistair King
  *
@@ -31,8 +30,6 @@
  * You should have received a copy of the GNU General Public License
  * along with libwandio; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * $Id$
  *
  */
 
