@@ -151,8 +151,13 @@ static off_t peek_read(io_t *io, void *buffer, off_t len)
 {
 	off_t ret = 0;
 
+        /* Have we previously encountered an error? */
+        if (DATA(io)->length < 0) {
+                return DATA(io)->length;
+        }
+
 	/* Is some of this data in the buffer? */
-	if (DATA(io)->buffer) {
+	if (DATA(io)->buffer && DATA(io)->length) {
 		ret = MIN(len,DATA(io)->length - DATA(io)->offset);
 
 		/* Copy anything we've got into their buffer, and shift our
