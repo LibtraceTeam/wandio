@@ -73,7 +73,7 @@ struct state_t {
 	/* The index of the buffer to read into next */
 	int in_buffer;
 	/* The read offset into the current buffer */
-	off_t offset;
+	int64_t offset;
 	/* The reading thread */
 	pthread_t producer;
 	/* Indicates that there is a free buffer to read into */
@@ -196,7 +196,7 @@ io_t *thread_open(io_t *parent)
 	return state;
 }
 
-static off_t thread_read(io_t *state, void *buffer, off_t len)
+static int64_t thread_read(io_t *state, void *buffer, int64_t len)
 {
 	int slice;
 	int copied=0;

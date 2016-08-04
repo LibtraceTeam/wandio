@@ -89,7 +89,7 @@ io_t *bz_open(io_t *parent)
 }
 
 
-static off_t bz_read(io_t *io, void *buffer, off_t len)
+static int64_t bz_read(io_t *io, void *buffer, int64_t len)
 {
 	if (DATA(io)->err == ERR_EOF)
 		return 0; /* EOF */

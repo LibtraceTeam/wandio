@@ -89,7 +89,7 @@ iow_t *lzma_wopen(iow_t *child, int compress_level)
 }
 
 
-static off_t lzma_wwrite(iow_t *iow, const char *buffer, off_t len)
+static int64_t lzma_wwrite(iow_t *iow, const char *buffer, int64_t len)
 {
 	if (DATA(iow)->err == ERR_EOF) {
 		return 0; /* EOF */

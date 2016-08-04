@@ -88,7 +88,7 @@ typedef struct {
 	 * @return The amount of bytes read, 0 if end of file is reached, -1
 	 * if an error occurs
 	 */
-	off_t (*read)(io_t *io, void *buffer, off_t len);
+	int64_t (*read)(io_t *io, void *buffer, int64_t len);
 
 	/** Reads from the IO source into the provided buffer but does not
 	 *  advance the read pointer.
@@ -99,14 +99,14 @@ typedef struct {
 	 * @return The amount of bytes read, 0 if end of file is reached, -1
 	 * if an error occurs
 	 */
-	off_t (*peek)(io_t *io, void *buffer, off_t len);
+	int64_t (*peek)(io_t *io, void *buffer, int64_t len);
 
 	/** Returns the current offset of the read pointer for an IO source.
 	 *
 	 * @param io		The IO reader to get the read offset for
 	 * @return The offset of the read pointer, or -1 if an error occurs
 	 */
-	off_t (*tell)(io_t *io);
+	int64_t (*tell)(io_t *io);
 	
 	/** Moves the read pointer for an IO source.
 	 * 
@@ -118,7 +118,7 @@ typedef struct {
 	 * 			for more details as to what these mean.
 	 * @return The value of the new read pointer, or -1 if an error occurs
 	 */
-	off_t (*seek)(io_t *io, off_t offset, int whence);
+	int64_t (*seek)(io_t *io, int64_t offset, int whence);
 	
 	/** Closes an IO reader. This function should free the IO reader.
 	 *
@@ -139,7 +139,7 @@ typedef struct {
 	 * @param len		The amount of writable data in the buffer
 	 * @return The amount of data written, or -1 if an error occurs
 	 */
-	off_t (*write)(iow_t *iow, const char *buffer, off_t len);
+	int64_t (*write)(iow_t *iow, const char *buffer, int64_t len);
 
 	/** Closes an IO writer. This function should free the IO writer. 
 	 *
@@ -257,7 +257,7 @@ io_t *wandio_create_uncompressed(const char *filename);
  * @param io		The IO reader to get the read offset for
  * @return The offset of the read pointer, or -1 if an error occurs
  */
-off_t wandio_tell(io_t *io);
+int64_t wandio_tell(io_t *io);
 
 /** Changes the read pointer offset to the specified value for a libwandio IO
  * reader.
@@ -271,7 +271,7 @@ off_t wandio_tell(io_t *io);
  * The arguments for this function are the same as those for lseek(2). See the
  * lseek(2) manpage for more details.
  */
-off_t wandio_seek(io_t *io, off_t offset, int whence);
+int64_t wandio_seek(io_t *io, int64_t offset, int whence);
 
 /** Reads from a libwandio IO reader into the provided buffer.
  *
@@ -280,7 +280,7 @@ off_t wandio_seek(io_t *io, off_t offset, int whence);
  * @param len		The size of the buffer
  * @return The amount of bytes read, 0 if EOF is reached, -1 if an error occurs
  */
-off_t wandio_read(io_t *io, void *buffer, off_t len);
+int64_t wandio_read(io_t *io, void *buffer, int64_t len);
 
 /** Reads from a libwandio IO reader into the provided buffer, but does not
  * update the read pointer.
@@ -290,7 +290,7 @@ off_t wandio_read(io_t *io, void *buffer, off_t len);
  * @param len		The size of the buffer
  * @return The amount of bytes read, 0 if EOF is reached, -1 if an error occurs
  */
-off_t wandio_peek(io_t *io, void *buffer, off_t len);
+int64_t wandio_peek(io_t *io, void *buffer, int64_t len);
 
 /** Destroys a libwandio IO reader, closing the file and freeing the reader
  * structure.
@@ -317,7 +317,7 @@ iow_t *wandio_wcreate(const char *filename, int compression_type, int compressio
  * @param len		The amount of writable data in the buffer
  * @return The amount of data written, or -1 if an error occurs
  */
-off_t wandio_wwrite(iow_t *iow, const void *buffer, off_t len);
+int64_t wandio_wwrite(iow_t *iow, const void *buffer, int64_t len);
 
 /** Destroys a libwandio IO writer, closing the file and freeing the writer
  * structure.
