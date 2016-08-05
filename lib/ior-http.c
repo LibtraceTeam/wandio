@@ -68,7 +68,7 @@ struct http_t {
 
         /* offset of the first byte in the buffer; the actual file offset equals
            off0 + p_buf */
-        off_t off0;
+        int64_t off0;
 
         /* max buffer size; CURL_MAX_WRITE_SIZE*2 is recommended */
 	int m_buf;
@@ -93,9 +93,9 @@ extern io_source_t http_source;
 #define HTTP_MAX_SKIP     (HTTP_DEF_BUFLEN<<1)
 
 io_t *http_open(const char *filename);
-static off_t http_read(io_t *io, void *buffer, off_t len);
-static off_t http_tell(io_t *io);
-static off_t http_seek(io_t *io, off_t offset, int whence);
+static int64_t http_read(io_t *io, void *buffer, int64_t len);
+static int64_t http_tell(io_t *io);
+static int64_t http_seek(io_t *io, int64_t offset, int whence);
 static void http_close(io_t *io);
 
 /* callback required by cURL */
@@ -214,7 +214,7 @@ io_t *http_open(const char *filename)
 	return io;
 }
 
-static off_t http_read(io_t *io, void *buffer, off_t len)
+static int64_t http_read(io_t *io, void *buffer, int64_t len)
 {
 	ssize_t rest = len;
 	if (DATA(io)->l_buf == 0) return 0; // end-of-file
@@ -243,15 +243,15 @@ static off_t http_read(io_t *io, void *buffer, off_t len)
 	return len - rest;
 }
 
-static off_t http_tell(io_t *io)
+static int64_t http_tell(io_t *io)
 {
         if (DATA(io) == 0) return -1;
 	return DATA(io)->off0 + DATA(io)->p_buf;
 }
 
-static off_t http_seek(io_t *io, off_t offset, int whence)
+static int64_t http_seek(io_t *io, int64_t offset, int whence)
 {
-        off_t new_off = -1, cur_off;
+        int64_t new_off = -1, cur_off;
 	int failed = 0, seek_end = 0;
 	assert(io);
 	cur_off = DATA(io)->off0 + DATA(io)->p_buf;
@@ -279,7 +279,7 @@ static off_t http_seek(io_t *io, off_t offset, int whence)
 		if (prepare(io) < 0 || fill_buffer(io) <= 0)
                         failed = 1;
 	} else { /* if jump is small, read through */
-		off_t r;
+		int64_t r;
 		r = http_read(io, 0, new_off - cur_off);
 		if (r + cur_off != new_off) failed = 1; // out of range
 	}

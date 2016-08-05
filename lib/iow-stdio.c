@@ -141,7 +141,7 @@ iow_t *stdio_wopen(const char *filename,int flags)
  *
  * Since most writes are likely to be larger than MIN_WRITE_SIZE optimise for that case.
  */
-static off_t stdio_wwrite(iow_t *iow, const char *buffer, off_t len)
+static int64_t stdio_wwrite(iow_t *iow, const char *buffer, int64_t len)
 {
 	int towrite = len;
 	/* Round down size to the nearest multiple of MIN_WRITE_SIZE */

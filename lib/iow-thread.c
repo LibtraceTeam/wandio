@@ -71,7 +71,7 @@ struct state_t {
 	/* The collection of buffers (or slices) */
 	struct buffer_t buffer[BUFFERS];
 	/* The write offset into the current buffer */
-	off_t offset;
+	int64_t offset;
 	/* The writing thread */
 	pthread_t consumer;
 	/* The child writer */
@@ -183,7 +183,7 @@ iow_t *thread_wopen(iow_t *child)
 	return state;
 }
 
-static off_t thread_wwrite(iow_t *state, const char *buffer, off_t len)
+static int64_t thread_wwrite(iow_t *state, const char *buffer, int64_t len)
 {
 	int slice;
 	int copied=0;
@@ -201,7 +201,7 @@ static off_t thread_wwrite(iow_t *state, const char *buffer, off_t len)
 
 		/* Copy out of our main buffer into the next available slice */
 		slice=min( 
-			(off_t)sizeof(OUTBUFFER(state).buffer)-DATA(state)->offset,
+			(int64_t)sizeof(OUTBUFFER(state).buffer)-DATA(state)->offset,
 			len);
 				
 		pthread_mutex_unlock(&DATA(state)->mutex);
@@ -223,7 +223,7 @@ static off_t thread_wwrite(iow_t *state, const char *buffer, off_t len)
 		/* If we've filled a buffer, move on to the next one and 
 		 * signal to the write thread that there is something for it
 		 * to do */
-		if (DATA(state)->offset >= (off_t)sizeof(OUTBUFFER(state).buffer)) {
+		if (DATA(state)->offset >= (int64_t)sizeof(OUTBUFFER(state).buffer)) {
 			OUTBUFFER(state).state = FULL;
 			pthread_cond_signal(&DATA(state)->data_ready);
 			DATA(state)->offset = 0;

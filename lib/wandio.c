@@ -253,7 +253,7 @@ DLLEXPORT io_t *wandio_create_uncompressed(const char *filename) {
 }
 
 
-DLLEXPORT off_t wandio_tell(io_t *io)
+DLLEXPORT int64_t wandio_tell(io_t *io)
 {
 	if (!io->source->tell) {
 		errno = -ENOSYS;
@@ -262,7 +262,7 @@ DLLEXPORT off_t wandio_tell(io_t *io)
 	return io->source->tell(io);
 }
 
-DLLEXPORT off_t wandio_seek(io_t *io, off_t offset, int whence)
+DLLEXPORT int64_t wandio_seek(io_t *io, int64_t offset, int whence)
 {
 	if (!io->source->seek) {
 		errno = -ENOSYS;
@@ -271,9 +271,9 @@ DLLEXPORT off_t wandio_seek(io_t *io, off_t offset, int whence)
 	return io->source->seek(io,offset,whence);
 }
 
-DLLEXPORT off_t wandio_read(io_t *io, void *buffer, off_t len)
+DLLEXPORT int64_t wandio_read(io_t *io, void *buffer, int64_t len)
 { 
-	off_t ret;
+	int64_t ret;
 	ret=io->source->read(io,buffer,len); 
 #if READ_TRACE
 	fprintf(stderr,"%p: read(%s): %d bytes = %d\n",io,io->source->name, (int)len,(int)ret);
@@ -281,9 +281,9 @@ DLLEXPORT off_t wandio_read(io_t *io, void *buffer, off_t len)
 	return ret;
 }
 
-DLLEXPORT off_t wandio_peek(io_t *io, void *buffer, off_t len)
+DLLEXPORT int64_t wandio_peek(io_t *io, void *buffer, int64_t len)
 {
-	off_t ret;
+	int64_t ret;
 	assert(io->source->peek); /* If this fails, it means you're calling
 				   * peek on something that doesn't support
 				   * peeking.   Push a peek_open() on the io
@@ -351,7 +351,7 @@ DLLEXPORT iow_t *wandio_wcreate(const char *filename, int compress_type, int com
 		return iow;
 }
 
-DLLEXPORT off_t wandio_wwrite(iow_t *iow, const void *buffer, off_t len)
+DLLEXPORT int64_t wandio_wwrite(iow_t *iow, const void *buffer, int64_t len)
 {
 #if WRITE_TRACE
 	fprintf(stderr,"wwrite(%s): %d bytes\n",iow->source->name, (int)len);

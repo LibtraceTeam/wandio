@@ -163,7 +163,7 @@ static void write8(struct buffer_t *buffer, uint8_t value)
 	write_buf(buffer, &value, sizeof(value));
 }
 
-static int lzo_wwrite_block(const char *buffer, off_t len, struct buffer_t *outbuf)
+static int lzo_wwrite_block(const char *buffer, int64_t len, struct buffer_t *outbuf)
 {
 	char b2[MAX_BUFFER_SIZE];
 	int err;
@@ -388,12 +388,12 @@ static struct lzothread_t *get_next_thread(iow_t *iow)
 	return &DATA(iow)->thread[DATA(iow)->next_thread];
 }
 
-static off_t lzo_wwrite(iow_t *iow, const char *buffer, off_t len)
+static int64_t lzo_wwrite(iow_t *iow, const char *buffer, int64_t len)
 {
-	off_t ret = 0;
+	int64_t ret = 0;
 	while (len>0) {
-		off_t size = len;
-		off_t err;
+		int64_t size = len;
+		int64_t err;
 		struct buffer_t outbuf;
 
 		if (!DATA(iow)->threads) {
@@ -419,7 +419,7 @@ static off_t lzo_wwrite(iow_t *iow, const char *buffer, off_t len)
 			}
 		}
 		else {
-			off_t space;
+			int64_t space;
 
 			pthread_mutex_lock(&get_next_thread(iow)->mutex);
 			/* If this thread is still compressing, wait for it to finish */

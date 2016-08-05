@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
                         continue;
                 }
 
-                off_t len;
+                int64_t len;
                 do {
                         len = wandio_read(ior, buffer, sizeof(buffer));
                         if (len > 0)

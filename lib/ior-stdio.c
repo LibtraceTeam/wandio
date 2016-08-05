@@ -75,17 +75,17 @@ io_t *stdio_open(const char *filename)
 	return io;
 }
 
-static off_t stdio_read(io_t *io, void *buffer, off_t len)
+static int64_t stdio_read(io_t *io, void *buffer, int64_t len)
 {
 	return read(DATA(io)->fd,buffer,len);
 }
 
-static off_t stdio_tell(io_t *io)
+static int64_t stdio_tell(io_t *io)
 {
 	return lseek(DATA(io)->fd, 0, SEEK_CUR);
 }
 
-static off_t stdio_seek(io_t *io, off_t offset, int whence)
+static int64_t stdio_seek(io_t *io, int64_t offset, int whence)
 {
 	return lseek(DATA(io)->fd, offset, whence);
 }
