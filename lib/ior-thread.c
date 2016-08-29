@@ -185,9 +185,15 @@ io_t *thread_open(io_t *parent)
 
 	/* Create the reading thread */
 	s = pthread_sigmask(SIG_SETMASK, &set, NULL);
+        if (s != 0) {
+                return NULL;
+        }
 	pthread_create(&DATA(state)->producer,NULL,thread_producer,state);
 	sigemptyset(&set);
 	s = pthread_sigmask(SIG_SETMASK, &set, NULL);
+        if (s != 0) {
+                return NULL;
+        }
 
 	return state;
 }
