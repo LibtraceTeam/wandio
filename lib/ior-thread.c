@@ -1,33 +1,26 @@
 /*
- * This file is part of libtrace
  *
- * Copyright (c) 2007,2008,2009,2010 The University of Waikato, Hamilton, 
- * New Zealand.
- *
- * Authors: Daniel Lawson 
- *          Perry Lorier
- *          Shane Alcock 
- *          
+ * Copyright (c) 2007-2016 The University of Waikato, Hamilton, New Zealand.
  * All rights reserved.
  *
- * This code has been developed by the University of Waikato WAND 
+ * This file is part of libwandio.
+ *
+ * This code has been developed by the University of Waikato WAND
  * research group. For further information please see http://www.wand.net.nz/
  *
- * libtrace is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * libwandio is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
- * libtrace is distributed in the hope that it will be useful,
+ * libwandio is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with libtrace; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id$
  *
  */
 
@@ -48,7 +41,7 @@
 #include <sys/prctl.h>
 #endif
 
-/* Libtrace IO module implementing a threaded reader.
+/* Libwandio IO module implementing a threaded reader.
  *
  * This module enables another IO reader, called the "parent", to perform its
  * reading using a separate thread. The reading thread reads data into a
@@ -76,7 +69,7 @@ struct state_t {
 	/* The index of the buffer to read into next */
 	int in_buffer;
 	/* The read offset into the current buffer */
-	off_t offset;
+	int64_t offset;
 	/* The reading thread */
 	pthread_t producer;
 	/* Indicates that there is a free buffer to read into */
@@ -192,14 +185,20 @@ io_t *thread_open(io_t *parent)
 
 	/* Create the reading thread */
 	s = pthread_sigmask(SIG_SETMASK, &set, NULL);
+        if (s != 0) {
+                return NULL;
+        }
 	pthread_create(&DATA(state)->producer,NULL,thread_producer,state);
 	sigemptyset(&set);
 	s = pthread_sigmask(SIG_SETMASK, &set, NULL);
+        if (s != 0) {
+                return NULL;
+        }
 
 	return state;
 }
 
-static off_t thread_read(io_t *state, void *buffer, off_t len)
+static int64_t thread_read(io_t *state, void *buffer, int64_t len)
 {
 	int slice;
 	int copied=0;

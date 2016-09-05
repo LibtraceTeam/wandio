@@ -1,32 +1,26 @@
 /*
- * This file is part of libtrace
  *
- * Copyright (c) 2007,2008,2009,2010 The University of Waikato, Hamilton, 
- * New Zealand.
- *
- * Authors: Perry Lorier
- *          Shane Alcock 
- *          
+ * Copyright (c) 2007-2016 The University of Waikato, Hamilton, New Zealand.
  * All rights reserved.
  *
- * This code has been developed by the University of Waikato WAND 
+ * This file is part of libwandio.
+ *
+ * This code has been developed by the University of Waikato WAND
  * research group. For further information please see http://www.wand.net.nz/
  *
- * libtrace is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * libwandio is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
- * libtrace is distributed in the hope that it will be useful,
+ * libwandio is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with libtrace; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: iow-lzo.c 1521 2010-02-08 22:21:16Z salcock $
  *
  */
 
@@ -81,7 +75,7 @@ static const int F_CS_MASK   = 0x00f00000L;
 
 static const int F_H_CRC32   = 0x00001000L;
 static const int F_ADLER32_D = 0x00000001L;
-static const int F_ADLER32_C = 0x00000002L;
+/*static const int F_ADLER32_C = 0x00000002L;*/
 
 /* popquiz! You throught "static const int" would be well constant didn't you?
  * You'd be wrong, you can't use them in places where the compiler needs a
@@ -100,7 +94,7 @@ static const unsigned char lzop_magic[9] =
     { 0x89, 0x4c, 0x5a, 0x4f, 0x00, 0x0d, 0x0a, 0x1a, 0x0a };
 
 
-/* Libtrace IO module implementing a lzo writer */
+/* Libwandio IO module implementing a lzo writer */
 
 enum err_t {
 	ERR_OK	= 1,
@@ -165,7 +159,7 @@ static void write8(struct buffer_t *buffer, uint8_t value)
 	write_buf(buffer, &value, sizeof(value));
 }
 
-static int lzo_wwrite_block(const char *buffer, off_t len, struct buffer_t *outbuf)
+static int lzo_wwrite_block(const char *buffer, int64_t len, struct buffer_t *outbuf)
 {
 	char b2[MAX_BUFFER_SIZE];
 	int err;
@@ -239,9 +233,9 @@ static void *lzo_compress_thread(void *data)
 {
 	struct lzothread_t *me = (struct lzothread_t *)data;
 	int err;
-	char namebuf[17];
 
 #ifdef PR_SET_NAME
+	char namebuf[17];
 	if (prctl(PR_GET_NAME, namebuf, 0,0,0) == 0) {
 		char label[16];
 		namebuf[16] = '\0'; /* Make sure it's NUL terminated */
@@ -390,12 +384,12 @@ static struct lzothread_t *get_next_thread(iow_t *iow)
 	return &DATA(iow)->thread[DATA(iow)->next_thread];
 }
 
-static off_t lzo_wwrite(iow_t *iow, const char *buffer, off_t len)
+static int64_t lzo_wwrite(iow_t *iow, const char *buffer, int64_t len)
 {
-	off_t ret = 0;
+	int64_t ret = 0;
 	while (len>0) {
-		off_t size = len;
-		off_t err;
+		int64_t size = len;
+		int64_t err;
 		struct buffer_t outbuf;
 
 		if (!DATA(iow)->threads) {
@@ -421,7 +415,7 @@ static off_t lzo_wwrite(iow_t *iow, const char *buffer, off_t len)
 			}
 		}
 		else {
-			off_t space;
+			int64_t space;
 
 			pthread_mutex_lock(&get_next_thread(iow)->mutex);
 			/* If this thread is still compressing, wait for it to finish */

@@ -1,33 +1,26 @@
 /*
- * This file is part of libtrace
  *
- * Copyright (c) 2007,2008,2009,2010 The University of Waikato, Hamilton, 
- * New Zealand.
- *
- * Authors: Daniel Lawson 
- *          Perry Lorier
- *          Shane Alcock 
- *          
+ * Copyright (c) 2007-2016 The University of Waikato, Hamilton, New Zealand.
  * All rights reserved.
  *
- * This code has been developed by the University of Waikato WAND 
+ * This file is part of libwandio.
+ *
+ * This code has been developed by the University of Waikato WAND
  * research group. For further information please see http://www.wand.net.nz/
  *
- * libtrace is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * libwandio is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
- * libtrace is distributed in the hope that it will be useful,
+ * libwandio is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with libtrace; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id$
  *
  */
 
@@ -40,7 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* Libtrace IO module implement a bzip writer */
+/* Libwandio IO module implement a bzip writer */
 
 enum err_t {
 	ERR_OK	= 1,
@@ -91,7 +84,7 @@ iow_t *bz_wopen(iow_t *child, int compress_level)
 }
 
 
-static off_t bz_wwrite(iow_t *iow, const char *buffer, off_t len)
+static int64_t bz_wwrite(iow_t *iow, const char *buffer, int64_t len)
 {
 	if (DATA(iow)->err == ERR_EOF) {
 		return 0; /* EOF */

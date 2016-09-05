@@ -1,33 +1,26 @@
 /*
- * This file is part of libtrace
  *
- * Copyright (c) 2007,2008,2009,2010 The University of Waikato, Hamilton, 
- * New Zealand.
- *
- * Authors: Daniel Lawson 
- *          Perry Lorier
- *          Shane Alcock 
- *          
+ * Copyright (c) 2007-2016 The University of Waikato, Hamilton, New Zealand.
  * All rights reserved.
  *
- * This code has been developed by the University of Waikato WAND 
+ * This file is part of libwandio.
+ *
+ * This code has been developed by the University of Waikato WAND
  * research group. For further information please see http://www.wand.net.nz/
  *
- * libtrace is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * libwandio is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
- * libtrace is distributed in the hope that it will be useful,
+ * libwandio is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with libtrace; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id$
  *
  */
 
@@ -40,8 +33,9 @@
 #include <errno.h>
 #include <inttypes.h>
 #include <string.h>
+#include <ctype.h>
 
-/* This file contains the implementation of the libtrace IO API, which format
+/* This file contains the implementation of the libwandio IO API, which format
  * modules should use to open, read from, write to, seek and close trace files.
  */
 
@@ -93,7 +87,7 @@ static void do_option(const char *option)
 	else if (strncmp(option,"buffers=",8) == 0)
 		max_buffers = atoi(option+8);
 	else {
-		fprintf(stderr,"Unknown libtraceio debug option '%s'\n", option);
+		fprintf(stderr,"Unknown libwandioio debug option '%s'\n", option);
 	}
 }
 
@@ -133,14 +127,37 @@ static void parse_env(void)
 
 static io_t *create_io_reader(const char *filename, int autodetect)
 {
-
+        io_t *io;
 	/* Use a peeking reader to look at the start of the trace file and
 	 * determine what type of compression may have been used to write
 	 * the file */
 
-	DEBUG_PIPELINE("stdio");
+        /* should we use http to read this file? */
+        int stdfile = 1;
+        const char *p, *q;
+        p = strstr(filename, "://");
+	if (p && *p) {
+                /* ensure the protocol is sane */
+		for (q = filename; q != p; ++q)
+			if (!isalnum(*q)) break;
+		if (q == p) stdfile = 0;
+	}
+        if (stdfile) {
+                DEBUG_PIPELINE("stdio");
+                io = stdio_open(filename);
+        }
+        else {
+#if HAVE_HTTP
+                DEBUG_PIPELINE("http");
+                io = http_open(filename);
+#else
+                fprintf(stderr, "%s appears to be an HTTP URI but libwandio has notbeen built with http (libcurl) support!\n", filename);
+                return NULL;
+#endif
+        }
+
 	DEBUG_PIPELINE("peek");
-	io_t *io = peek_open(stdio_open(filename));
+        io = peek_open(io);
 	unsigned char buffer[1024];
 	int len;
 	if (!io)
@@ -157,7 +174,7 @@ static io_t *create_io_reader(const char *filename, int autodetect)
 			DEBUG_PIPELINE("zlib");
 			io = zlib_open(io);
 #else
-			fprintf(stderr, "File %s is gzip compressed but libtrace has not been built with zlib support!\n", filename);
+			fprintf(stderr, "File %s is gzip compressed but libwandio has not been built with zlib support!\n", filename);
 			return NULL;
 #endif
 		}
@@ -167,7 +184,7 @@ static io_t *create_io_reader(const char *filename, int autodetect)
 			DEBUG_PIPELINE("zlib");
 			io = zlib_open(io);
 #else
-			fprintf(stderr, "File %s is compress(1) compressed but libtrace has not been built with zlib support!\n", filename);
+			fprintf(stderr, "File %s is compress(1) compressed but libwandio has not been built with zlib support!\n", filename);
 			return NULL;
 #endif
 		}
@@ -178,7 +195,7 @@ static io_t *create_io_reader(const char *filename, int autodetect)
 			DEBUG_PIPELINE("bzip");
 			io = bz_open(io);
 #else
-			fprintf(stderr, "File %s is bzip compressed but libtrace has not been built with bzip2 support!\n", filename);
+			fprintf(stderr, "File %s is bzip compressed but libwandio has not been built with bzip2 support!\n", filename);
 			return NULL;
 #endif
 		}
@@ -190,7 +207,7 @@ static io_t *create_io_reader(const char *filename, int autodetect)
                         DEBUG_PIPELINE("lzma");
                         io = lzma_open(io);
 #else
-                        fprintf(stderr, "File %s is lzma compressed but libtrace has not been built with lzma support!\n", filename);
+                        fprintf(stderr, "File %s is lzma compressed but libwandio has not been built with lzma support!\n", filename);
                         return NULL;
 #endif
                 }
@@ -232,7 +249,7 @@ DLLEXPORT io_t *wandio_create_uncompressed(const char *filename) {
 }
 
 
-DLLEXPORT off_t wandio_tell(io_t *io)
+DLLEXPORT int64_t wandio_tell(io_t *io)
 {
 	if (!io->source->tell) {
 		errno = -ENOSYS;
@@ -241,7 +258,7 @@ DLLEXPORT off_t wandio_tell(io_t *io)
 	return io->source->tell(io);
 }
 
-DLLEXPORT off_t wandio_seek(io_t *io, off_t offset, int whence)
+DLLEXPORT int64_t wandio_seek(io_t *io, int64_t offset, int whence)
 {
 	if (!io->source->seek) {
 		errno = -ENOSYS;
@@ -250,9 +267,9 @@ DLLEXPORT off_t wandio_seek(io_t *io, off_t offset, int whence)
 	return io->source->seek(io,offset,whence);
 }
 
-DLLEXPORT off_t wandio_read(io_t *io, void *buffer, off_t len)
+DLLEXPORT int64_t wandio_read(io_t *io, void *buffer, int64_t len)
 { 
-	off_t ret;
+	int64_t ret;
 	ret=io->source->read(io,buffer,len); 
 #if READ_TRACE
 	fprintf(stderr,"%p: read(%s): %d bytes = %d\n",io,io->source->name, (int)len,(int)ret);
@@ -260,9 +277,9 @@ DLLEXPORT off_t wandio_read(io_t *io, void *buffer, off_t len)
 	return ret;
 }
 
-DLLEXPORT off_t wandio_peek(io_t *io, void *buffer, off_t len)
+DLLEXPORT int64_t wandio_peek(io_t *io, void *buffer, int64_t len)
 {
-	off_t ret;
+	int64_t ret;
 	assert(io->source->peek); /* If this fails, it means you're calling
 				   * peek on something that doesn't support
 				   * peeking.   Push a peek_open() on the io
@@ -330,7 +347,7 @@ DLLEXPORT iow_t *wandio_wcreate(const char *filename, int compress_type, int com
 		return iow;
 }
 
-DLLEXPORT off_t wandio_wwrite(iow_t *iow, const void *buffer, off_t len)
+DLLEXPORT int64_t wandio_wwrite(iow_t *iow, const void *buffer, int64_t len)
 {
 #if WRITE_TRACE
 	fprintf(stderr,"wwrite(%s): %d bytes\n",iow->source->name, (int)len);

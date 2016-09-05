@@ -1,7 +1,7 @@
-WANDIO 3.0.22
+WANDIO 1.0.4
 
 ---------------------------------------------------------------------------
-Copyright (c) 2007-2015 The University of Waikato, Hamilton, New Zealand.
+Copyright (c) 2007-2016 The University of Waikato, Hamilton, New Zealand.
 All rights reserved.
 
 This code has been developed by the University of Waikato WAND
@@ -17,14 +17,16 @@ provides transparent compression/decompression for the following formats:
  - bzip2
  - lzo (write-only)
  - lzma
+ - http (read-only)
+
 WANDIO also improves IO performance by performing compression/decompression in a
-separare thread (if pthreads are available).
+separate thread (if pthreads are available).
 
 Bugs should be reported by either emailing contact@wand.net.nz or filing
 an issue at https://github.com/wanduow/wandio
 
-It is licensed under the GNU General Public License (GPL) version 2. Please
-see the included file GPL for details of this license.
+It is licensed under the Lesser GNU General Public License (LGPL) version 3. Please
+see the included files COPYING and COPYING.LESSER for details of this license.
 
 For further information, please contact the WAND group. See
 http://www.wand.net.nz/ for details.

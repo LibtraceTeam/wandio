@@ -1,0 +1,8 @@
+Version 1.0.4
+=============
+
+Full credit to Alistair King for the bug fixes in this release
+
+ * Switched from GPL to LGPL license
+ * Fixed nasty segfaults when running on a 32 bit system (hopefully for good!)
+ * Fixed another memory error when calling read after an error.

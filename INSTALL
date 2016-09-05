@@ -3,7 +3,10 @@ Requirements:
 
 
 Strongly recommended:
+ * libpthread
  * zlib-dev
+ * libbz2-dev
+ * liblzma-dev
 
 ----------------------------------
 

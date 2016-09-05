@@ -1,33 +1,26 @@
 /*
- * This file is part of libtrace
  *
- * Copyright (c) 2007,2008,2009,2010 The University of Waikato, Hamilton, 
- * New Zealand.
- *
- * Authors: Daniel Lawson 
- *          Perry Lorier
- *          Shane Alcock 
- *          
+ * Copyright (c) 2007-2016 The University of Waikato, Hamilton, New Zealand.
  * All rights reserved.
  *
- * This code has been developed by the University of Waikato WAND 
+ * This file is part of libwandio.
+ *
+ * This code has been developed by the University of Waikato WAND
  * research group. For further information please see http://www.wand.net.nz/
  *
- * libtrace is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * libwandio is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
- * libtrace is distributed in the hope that it will be useful,
+ * libwandio is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with libtrace; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id$
  *
  */
 
@@ -42,7 +35,7 @@
 #include <assert.h>
 #include <stddef.h>
 
-/* Libtrace IO module implementing a peeking reader.
+/* Libwandio IO module implementing a peeking reader.
  *
  * Assuming my understanding of Perry's code is correct, this module provides
  * generic support for "peeking" that can be used in concert with any other
@@ -62,8 +55,8 @@
 struct peek_t {
 	io_t *child;
 	char *buffer;
-	off_t length; /* Length of buffer */
-	off_t offset; /* Offset into buffer */
+	int64_t length; /* Length of buffer */
+	int64_t offset; /* Offset into buffer */
 };
 
 extern io_source_t peek_source;
@@ -92,9 +85,9 @@ io_t *peek_open(io_t *child)
 /* Read at least "len" bytes from the child io into the internal buffer, and return how many
    bytes was actually read.
  */
-static off_t refill_buffer(io_t *io, off_t len)
+static int64_t refill_buffer(io_t *io, int64_t len)
 {
-	off_t bytes_read;
+	int64_t bytes_read;
 	assert(DATA(io)->length - DATA(io)->offset == 0);
 	/* Select the largest of "len", PEEK_SIZE and the current peek buffer size
 	 * and then round up to the nearest multiple of MIN_READ_SIZE 
@@ -150,12 +143,17 @@ static off_t refill_buffer(io_t *io, off_t len)
 	
 }
 
-static off_t peek_read(io_t *io, void *buffer, off_t len)
+static int64_t peek_read(io_t *io, void *buffer, int64_t len)
 {
-	off_t ret = 0;
+	int64_t ret = 0;
+
+        /* Have we previously encountered an error? */
+        if (DATA(io)->length < 0) {
+                return DATA(io)->length;
+        }
 
 	/* Is some of this data in the buffer? */
-	if (DATA(io)->buffer) {
+	if (DATA(io)->buffer && DATA(io)->length) {
 		ret = MIN(len,DATA(io)->length - DATA(io)->offset);
 
 		/* Copy anything we've got into their buffer, and shift our
@@ -172,7 +170,7 @@ static off_t peek_read(io_t *io, void *buffer, off_t len)
 	if (len>0) {
 		/* To get here, the buffer must be empty */
 		assert(DATA(io)->length-DATA(io)->offset == 0);
-		off_t bytes_read;
+		int64_t bytes_read;
 		/* If they're reading exactly a block size, just use that, no point in malloc'ing 
 		 * and memcpy()ing needlessly.  However, if the buffer isn't aligned, we need to
 		 * pass on an aligning buffer, skip this and do it into our own aligned buffer.
@@ -248,15 +246,15 @@ static void *alignedrealloc(void *old, size_t oldsize, size_t size, int *res)
 }
 
 
-static off_t peek_peek(io_t *io, void *buffer, off_t len)
+static int64_t peek_peek(io_t *io, void *buffer, int64_t len)
 {
-	off_t ret = 0;
+	int64_t ret = 0;
 	int res = 0;
 
 	/* Is there enough data in the buffer to serve this request? */
 	if (DATA(io)->length - DATA(io)->offset < len) {
 		/* No, we need to extend the buffer. */
-		off_t read_amount = len - (DATA(io)->length - DATA(io)->offset);
+		int64_t read_amount = len - (DATA(io)->length - DATA(io)->offset);
 		/* Round the read_amount up to the nearest MB */
 		read_amount += PEEK_SIZE - ((DATA(io)->length + read_amount) % PEEK_SIZE);
 		DATA(io)->buffer = alignedrealloc(DATA(io)->buffer, 
@@ -288,14 +286,14 @@ static off_t peek_peek(io_t *io, void *buffer, off_t len)
 	return ret;
 }
 
-static off_t peek_tell(io_t *io)
+static int64_t peek_tell(io_t *io)
 {
 	/* We don't actually maintain a read offset as such, so we want to
 	 * return the child's read offset */
 	return wandio_tell(DATA(io)->child);
 }
 
-static off_t peek_seek(io_t *io, off_t offset, int whence)
+static int64_t peek_seek(io_t *io, int64_t offset, int whence)
 {
 	/* Again, we don't have a genuine read offset so we need to pass this
 	 * one on to the child */
