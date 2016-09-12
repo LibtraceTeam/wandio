@@ -8,3 +8,4 @@ Thanks to Alistair King for numerous contributions (including the entirety
 of the HTTP reader), bug reports and being kind enough to take on the job of 
 separating libwandio from libtrace.
 
+Thanks to Brad Cowie for packaging libwandio for Debian.
