@@ -47,8 +47,11 @@ else
 LIBTRACEIO_ZSTD_LZ4=
 endif
 
+# if we have HTTP support, we also build Swift support
 if HAVE_HTTP
-LIBTRACEIO_HTTP=ior-http.c
+LIBTRACEIO_HTTP=ior-http.c \
+	ior-swift.c swift-keystone.c swift-keystone.h \
+	curl-helper.c curl-helper.h
 else
 LIBTRACE_HTTP=
 endif

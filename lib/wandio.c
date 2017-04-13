@@ -129,7 +129,7 @@ static io_t *create_io_reader(const char *filename, int autodetect) {
          * determine what type of compression may have been used to write
          * the file */
 
-        /* should we use http to read this file? */
+        /* should we use http or swift to read this file? */
         int stdfile = 1;
         const char *p, *q;
         p = strstr(filename, "://");
@@ -146,13 +146,17 @@ static io_t *create_io_reader(const char *filename, int autodetect) {
                 base = stdio_open(filename);
         } else {
 #if HAVE_HTTP
-                DEBUG_PIPELINE("http");
-                base = http_open(filename);
+                /* is this a swift file? */
+                p = strstr(filename, "swift://");
+                if (p && *p) {
+                        DEBUG_PIPELINE("swift");
+                        io = swift_open(filename);
+                } else {
+                        DEBUG_PIPELINE("http");
+                        io = http_open(filename);
+                }
 #else
-                fprintf(stderr,
-                        "%s appears to be an HTTP URI but libwandio has "
-                        "notbeen built with http (libcurl) support!\n",
-                        filename);
+                fprintf(stderr, "%s appears to be an HTTP or Swift URI but libwandio has not been built with http (libcurl) support!\n", filename);
                 return NULL;
 #endif
         }
