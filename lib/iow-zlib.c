@@ -134,7 +134,7 @@ static int64_t zlib_wwrite(iow_t *iow, const char *buffer, int64_t len)
 				DATA(iow)->err = ERR_ERROR;
 		}
 	}
-	/* Return the number of bytes decompressed */
+	/* Return the number of bytes compressed */
 	return len-DATA(iow)->strm.avail_in;
 }
 
