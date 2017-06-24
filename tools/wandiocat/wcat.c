@@ -33,8 +33,16 @@ int main(int argc, char *argv[])
                 switch (c)
                 {
                 case 'Z':
-                        compress_type = wandio_lookup_compression_type(optarg)
-                                        ->compress_type;
+		    {
+		        struct wandio_compression_type* compression_type =
+			  wandio_lookup_compression_type(optarg);
+			if (compression_type == 0) {
+			    fprintf(stderr, "Unable to lookup compression type: '%s'\n",
+				    optarg);
+			    return -1;
+			}
+			compress_type = compression_type->compress_type;
+		    }
                         break;
                 case 'z':
                         compress_level = atoi(optarg);
