@@ -15,7 +15,7 @@ static void printhelp() {
         printf("    Default is 0.\n");
         printf(" -Z <method>\n");
         printf("    Set the compression method. Must be one of 'gzip', \n");
-        printf("    'bzip2', 'lzo' or 'lzma'. If not specified, no\n");
+        printf("    'bzip2', 'lzo', 'lzma', or 'zstd'. If not specified, no\n");
         printf("    compression is performed.\n");
         printf(" -o <file>\n");
         printf("    The name of the output file. If not specified, output\n");

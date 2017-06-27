@@ -17,6 +17,7 @@ provides transparent compression/decompression for the following formats:
  - bzip2
  - lzo (write-only)
  - lzma
+ - zstd
  - http (read-only)
 
 WANDIO also improves IO performance by performing compression/decompression in a

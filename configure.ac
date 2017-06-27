@@ -211,6 +211,29 @@ AS_IF([test "x$have_lzma" = "xyes"], [
 	with_lzma=no]
 )
 
+AC_ARG_WITH([zstd],
+	AC_HELP_STRING([--with-zstd], [build with support for zstd compressed files]))
+
+AS_IF([test "x$with_zstd" != "xno"],
+	[
+	AC_CHECK_HEADER(zstd.h, have_zstd=yes, have_zstd=no)
+	], [have_lzma=no])
+
+AS_IF([test "x$have_zstd" = "xyes"], [
+	if test "$ac_cv_lib_zstd_code" != "none required"; then
+		LIBWANDIO_LIBS="$LIBWANDIO_LIBS -lzstd"
+	fi
+	AC_DEFINE(HAVE_LIBZSTD, 1, "Compiled with zstd support")
+	with_zstd=yes],
+
+
+	[AS_IF([test "x$with_zstd" = "xyes"],
+		[AC_MSG_ERROR([zstd requested but not found])])
+	AC_DEFINE(HAVE_LIBZSTD, 0, "Compiled with lzma support")
+	with_zstd=no]
+)
+
+
 AC_ARG_WITH([http],
         AC_HELP_STRING([--with-http], [build with support for reading files over http (using libcurl)]))
 
@@ -239,6 +262,7 @@ AM_CONDITIONAL([HAVE_BZLIB], [test "x$with_bzip2" != "xno"])
 AM_CONDITIONAL([HAVE_ZLIB], [test "x$with_zlib" != "xno"])
 AM_CONDITIONAL([HAVE_LZO], [ test "x$with_lzo" != "xno"])
 AM_CONDITIONAL([HAVE_LZMA], [ test "x$with_lzma" != "xno"])
+AM_CONDITIONAL([HAVE_ZSTD], [ test "x$with_zstd" != "xno"])
 AM_CONDITIONAL([HAVE_HTTP], [ test "x$with_http" != "xno"])
 
 # Set all our output variables
@@ -275,4 +299,5 @@ reportopt "Compiled with compressed file (zlib) support" $with_zlib
 reportopt "Compiled with compressed file (bz2) support" $with_bzip2
 reportopt "Compiled with compressed file (lzo write only) support" $with_lzo
 reportopt "Compiled with compressed file (lzma) support" $with_lzma
+reportopt "Compiled with compressed file (zstd) support" $with_zstd
 reportopt "Compiled with http read (libcurl) support" $with_http

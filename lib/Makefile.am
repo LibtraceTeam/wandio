@@ -29,6 +29,12 @@ else
 LIBTRACEIO_LZMA=
 endif
 
+if HAVE_ZSTD
+LIBTRACEIO_ZSTD=ior-zstd.c iow-zstd.c
+else
+LIBTRACEIO_ZSTD=
+endif
+
 if HAVE_HTTP
 LIBTRACEIO_HTTP=ior-http.c
 else
@@ -38,7 +44,7 @@ endif
 libwandio_la_SOURCES=wandio.c ior-peek.c ior-stdio.c ior-thread.c \
 		iow-stdio.c iow-thread.c wandio.h wandio_internal.h \
 		$(LIBTRACEIO_ZLIB) $(LIBTRACEIO_BZLIB) $(LIBTRACEIO_LZO) \
-                $(LIBTRACEIO_LZMA) $(LIBTRACEIO_HTTP)
+                $(LIBTRACEIO_LZMA) $(LIBTRACEIO_HTTP) $(LIBTRACEIO_ZSTD)
 
 AM_CPPFLAGS = @ADD_INCLS@
 libwandio_la_LIBADD = @LIBWANDIO_LIBS@
