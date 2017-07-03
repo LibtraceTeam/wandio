@@ -41,7 +41,7 @@ static void printhelp() {
         printf("    Default is 0.\n");
         printf(" -Z <method>\n");
         printf("    Set the compression method. Must be one of 'gzip', \n");
-        printf("    'bzip2', 'lzo' or 'lzma'. If not specified, no\n");
+        printf("    'bzip2', 'lzo', 'lzma', or 'zstd'. If not specified, no\n");
         printf("    compression is performed.\n");
         printf(" -o <file>\n");
         printf("    The name of the output file. If not specified, output\n");
@@ -59,8 +59,16 @@ int main(int argc, char *argv[])
                 switch (c)
                 {
                 case 'Z':
-                        compress_type = wandio_lookup_compression_type(optarg)
-                                        ->compress_type;
+		    {
+		        struct wandio_compression_type* compression_type =
+			  wandio_lookup_compression_type(optarg);
+			if (compression_type == 0) {
+			    fprintf(stderr, "Unable to lookup compression type: '%s'\n",
+				    optarg);
+			    return -1;
+			}
+			compress_type = compression_type->compress_type;
+		    }
                         break;
                 case 'z':
                         compress_level = atoi(optarg);
