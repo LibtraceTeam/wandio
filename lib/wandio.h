@@ -305,7 +305,7 @@ void wandio_destroy(io_t *io);
  * @param compression_type	Compression type
  * @param compression_level	The compression level to use when writing
  * @param flags			Flags to apply when opening the file, e.g.
- * 				O_CREATE
+ * 				O_CREAT. See fcntl.h for more flags.
  * @return A pointer to the new libwandio IO writer, or NULL if an error occurs
  */
 iow_t *wandio_wcreate(const char *filename, int compression_type, int compression_level, int flags);
