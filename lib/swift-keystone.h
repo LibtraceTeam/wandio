@@ -33,4 +33,58 @@
 #ifndef SWIFT_KEYSTONE_H
 #define SWIFT_KEYSTONE_H 1 /**< Guard Define */
 
+/** Represents Keystone password authentication credentials */
+typedef struct {
+
+  /** Auth URL */
+  char *auth_url;
+
+  /** Username */
+  char *username;
+
+  /** Password */
+  char *password;
+
+  /** Project */
+  char *project;
+
+  /** Domain ID */
+  char *domain_id;
+
+} keystone_auth_creds_t;
+
+/* Represents the result of a Keystone authentication request */
+typedef struct {
+
+  /** Token */
+  char *token;
+
+  /** Swift Storage URL */
+  char *storage_url;
+
+} keystone_auth_result_t;
+
+/**
+ * Perform Keystone V3 authentication
+ *
+ * @param creds         Authentication credentials
+ * @param auth[out]     Point to auth result structure to fill
+ * @return 1 if authentication was successful, 0 if it failed, -1 if an error
+ * occurred.
+ *
+ * @TODO: consider adding an error message to the result struct?
+ */
+int keystone_authenticate(keystone_auth_creds_t *creds,
+                          keystone_auth_result_t *auth);
+
+/**
+ * Dump the given auth token to stdout.
+ * Uses the same format as the `swift auth` CLI command.
+ *
+ * @param auth          pointer to a valid authentication result structure.
+ */
+void keystone_auth_dump(keystone_auth_result_t *auth);
+
+/** Free a token result */
+
 #endif

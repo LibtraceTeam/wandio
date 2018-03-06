@@ -61,6 +61,30 @@ io_t *swift_open(const char *filename)
 
         io->source = &swift_source;
 
+        // TODO: basic process:
+        //  - try and grab swift info from ENV
+        //  - check minimum env parameters present
+        //    - OS_STORAGE_URL, OS_AUTH_TOKEN
+        //    - OS_PROJECT_NAME, OS_USERNAME, OS_PASSWORD, OS_AUTH_URL
+        //    - (opt: DOMAIN? VERSION (err check only))
+        //  - if there is NOT a token set, do keystone auth
+        //  - if auth fails, error out
+        //  - ask http reader to open the object (passing token)
+
+        // ask keystone helper to do authentication
+        keystone_auth_creds_t creds = {
+          "https://hermes-auth.caida.org",
+          "testuser", // username
+          "testpass", // pass
+          "testproject", // project
+          "default", // domain
+        };
+        keystone_auth_result_t auth;
+        if (keystone_authenticate(&creds, &auth) != 1) {
+          return NULL;
+        }
+        keystone_auth_dump(&auth);
+
         // TODO
 
 	return io;
