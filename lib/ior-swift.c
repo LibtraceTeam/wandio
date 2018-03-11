@@ -103,7 +103,7 @@ static int parse_swifturl(const char *swifturl, char **container, char **object)
         (*container)[clen] = '\0';
 
         // now the object name
-        if ((*object = malloc(olen)) == NULL) {
+        if ((*object = malloc(olen + 1)) == NULL) {
                 free(*container);
                 return -1;
         }
