@@ -41,6 +41,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include "wandio.h"
+#include "curl-helper.h"
 
 /* Libwandio IO module implementing an HTTP reader (using libcurl)
  */
@@ -110,7 +111,28 @@ static size_t write_cb(char *ptr, size_t size, size_t nmemb, void *data) {
         return nbytes;
 }
 
-static int prepare(io_t *io) {
+static int process_hdrs(io_t *io, char **hdrs, int hdrs_cnt)
+{
+        struct curl_slist *c_hdrs = NULL;
+        int i;
+
+        if (!hdrs || !hdrs_cnt) {
+                return 0;
+        }
+
+        for (i = 0; i < hdrs_cnt; i++) {
+                if ((c_hdrs = curl_slist_append(c_hdrs, hdrs[i])) == NULL) {
+                        return -1;
+                }
+        }
+
+        curl_easy_setopt(DATA(io)->curl, CURLOPT_HTTPHEADER, c_hdrs);
+
+        return 0;
+}
+
+static int prepare(io_t *io)
+{
         int rc;
         rc = curl_multi_remove_handle(DATA(io)->multi, DATA(io)->curl);
         rc = curl_easy_setopt(DATA(io)->curl, CURLOPT_RESUME_FROM,
@@ -200,9 +222,11 @@ static int fill_buffer(io_t *io) {
         return DATA(io)->l_buf;
 }
 
-io_t *http_open(const char *filename) {
-        io_t *io = malloc(sizeof(io_t));
-        io->data = calloc(1, sizeof(struct http_t));
+io_t *http_open_hdrs(const char *filename, char **hdrs, int hdrs_cnt)
+{
+  	io_t *io = malloc(sizeof(io_t));
+        if (!io) return NULL;
+	io->data = malloc(sizeof(struct http_t));
         if (!io->data) {
                 free(io);
                 return NULL;
@@ -215,12 +239,22 @@ io_t *http_open(const char *filename) {
                 return NULL;
         }
 
+	if (hdrs && process_hdrs(io, hdrs, hdrs_cnt) != 0) {
+	  http_close(io);
+	  return NULL;
+        }
+
         if (prepare(io) < 0 || fill_buffer(io) < 0) {
                 http_close(io);
                 return NULL;
         }
 
         return io;
+}
+
+io_t *http_open(const char *filename)
+{
+        return http_open_hdrs(filename, NULL, 0);
 }
 
 io_t *init_io(io_t *io) {

@@ -42,15 +42,118 @@
 
 struct swift_t {
 
+        // Name of the Swift container to read
+        char *container;
+
+        // Name of the Swift object to read
+        char *object;
+
+        // Authentication credentials to use with Keystone
+        keystone_auth_creds_t creds;
+
+        // Keystone stoken and Swift storage URL (either returned by Keystone or
+        // extracted from the environment)
+        keystone_auth_token_t token;
+
+        // Child reader that does the actual data download
+        io_t *http_reader;
 };
 
 extern io_source_t swift_source;
 
 #define DATA(io) ((struct swift_t *)((io)->data))
 
+#define SWIFT_PFX "swift://"
+#define SWIFT_PFX_LEN 8
+#define SWIFT_AUTH_TOKEN_HDR "X-Auth-Token: "
+
+io_t *swift_open(const char *filename);
+static int64_t swift_read(io_t *io, void *buffer, int64_t len);
+static int64_t swift_tell(io_t *io);
+static int64_t swift_seek(io_t *io, int64_t offset, int whence);
+static void swift_close(io_t *io);
+
+static int parse_swifturl(const char *swifturl, char **container, char **object)
+{
+        const char *ctmp;
+        const char *otmp;
+        size_t clen, olen;
+        // parse string like swift://CONTAINER/OBJECT
+        if (!swifturl || strlen(swifturl) < SWIFT_PFX_LEN+1 ||
+            strncmp(swifturl, SWIFT_PFX, SWIFT_PFX_LEN) != 0) {
+                // malformed URL
+                return -1;
+        }
+        // now, skip over the prefix and assume this is the container
+        ctmp = swifturl + SWIFT_PFX_LEN;
+        // and then look for the next '/'
+        if ((otmp = strchr(ctmp, '/')) == NULL) {
+                // malformed URL (no object?)
+                return -1;
+        }
+        otmp++; // skip over the slash
+        // now we know how long things are, so allocate some memory
+        clen = otmp-ctmp-1;
+        olen = strlen(otmp);
+        if ((*container = malloc(clen + 1)) == NULL) {
+                return -1;
+        }
+        // and copy the string in
+        memcpy(*container, ctmp, clen);
+        (*container)[clen] = '\0';
+
+        // now the object name
+        if ((*object = malloc(olen)) == NULL) {
+                free(*container);
+                return -1;
+        }
+        memcpy(*object, otmp, olen);
+        (*object)[olen] = '\0';
+
+        return 0;
+}
+
+static char *build_auth_token_hdr(char *token)
+{
+        char *hdr;
+
+        if ((hdr = malloc(strlen(SWIFT_AUTH_TOKEN_HDR) +
+                          strlen(token) + 1)) == NULL) {
+                return NULL;
+        }
+
+        strcpy(hdr, SWIFT_AUTH_TOKEN_HDR);
+        strcat(hdr, token);
+
+        return hdr;
+}
+
+static char *build_http_url(struct swift_t *s)
+{
+        // STORAGE_URL/CONTAINER/OBJECT
+        char *url;
+
+        if ((url = malloc(strlen(s->token.storage_url) + 1 +
+                          strlen(s->container) + 1 +
+                          strlen(s->object) + 1)) == NULL) {
+                return NULL;
+        }
+
+        strcpy(url, s->token.storage_url);
+        strcat(url, "/");
+        strcat(url, s->container);
+        strcat(url, "/");
+        strcat(url, s->object);
+
+        return url;
+}
+
 io_t *swift_open(const char *filename)
 {
 	io_t *io = malloc(sizeof(io_t));
+        char *auth_hdr = NULL;
+        char *http_url = NULL;
+
         if (!io) return NULL;
 	io->data = malloc(sizeof(struct swift_t));
         if (!io->data) {
@@ -61,51 +164,86 @@ io_t *swift_open(const char *filename)
 
         io->source = &swift_source;
 
-        // TODO: basic process:
-        //  - try and grab swift info from ENV
-        //  - check minimum env parameters present
-        //    - OS_STORAGE_URL, OS_AUTH_TOKEN
-        //    - OS_PROJECT_NAME, OS_USERNAME, OS_PASSWORD, OS_AUTH_URL
-        //    - (opt: DOMAIN? VERSION (err check only))
-        //  - if there is NOT a token set, do keystone auth
-        //  - if auth fails, error out
-        //  - ask http reader to open the object (passing token)
-
-        // ask keystone helper to do authentication
-        keystone_auth_creds_t creds = {
-          "https://hermes-auth.caida.org",
-          "testuser", // username
-          "testpass", // pass
-          "testproject", // project
-          "default", // domain
-        };
-        keystone_auth_result_t auth;
-        if (keystone_authenticate(&creds, &auth) != 1) {
-          return NULL;
+        // parse the filename in to container and object
+        if (parse_swifturl(filename, &DATA(io)->container,
+                           &DATA(io)->object) != 0) {
+                swift_close(io);
+                return NULL;
         }
-        keystone_auth_dump(&auth);
 
-        // TODO
+        // parse the environment variables that we support
+        if (keystone_env_parse_token(&DATA(io)->token) != 1) {
+                fprintf(stderr,
+                        "ERROR: Could not find required OS_AUTH_TOKEN and/or "
+                        "OS_STORAGE_URL environment variables\n");
+                swift_close(io);
+                return NULL;
+        }
+
+        // TODO: add support for directly obtaining token from keystone using
+        // credentials. for now we'll have to use the python client to get a
+        // token and then export into the environment.
+
+        // DEBUG:
+        // keystone_auth_token_dump(&DATA(io)->token);
+
+        // by here we are sure that we have an auth token and storage url, so we
+        // need to do two more things: build the header to pass to curl, and
+        // build the full http object path for the GET request
+        if ((auth_hdr = build_auth_token_hdr(DATA(io)->token.token)) == NULL) {
+                goto err;
+        }
+        fprintf(stderr, "DEBUG: hdr: '%s'\n", auth_hdr);
+
+        // build the full HTTP URL
+        if ((http_url = build_http_url(DATA(io))) == NULL) {
+                goto err;
+        }
+        fprintf(stderr, "DEBUG: url: '%s'\n", http_url);
+
+        // open the child reader!
+        if ((DATA(io)->http_reader =
+             http_open_hdrs(http_url, &auth_hdr, 1)) == NULL) {
+                goto err;
+        }
 
 	return io;
+
+ err:
+        free(auth_hdr);
+        free(http_url);
+        swift_close(io);
+        return NULL;
 }
 
 static int64_t swift_read(io_t *io, void *buffer, int64_t len)
 {
-        // TODO
-        return -1;
+        if (!DATA(io)->http_reader) return 0; // end-of-file?
+        return wandio_read(DATA(io)->http_reader, buffer, len);
 }
 
 static int64_t swift_tell(io_t *io)
 {
-        if (DATA(io) == 0) return -1;
-        // TODO
-        return -1;
+        if (!DATA(io)->http_reader) return -1;
+        return wandio_tell(DATA(io)->http_reader);
+}
+
+static int64_t swift_seek(io_t *io, int64_t offset, int whence)
+{
+        if (!DATA(io)->http_reader) return -1;
+        return wandio_seek(DATA(io)->http_reader, offset, whence);
 }
 
 static void swift_close(io_t *io)
 {
-        // TODO
+        free(DATA(io)->container);
+        free(DATA(io)->object);
+        keystone_auth_creds_destroy(&DATA(io)->creds);
+        keystone_auth_token_destroy(&DATA(io)->token);
+
+        if (DATA(io)->http_reader != NULL) {
+                wandio_destroy(DATA(io)->http_reader);
+        }
 
 	free(io->data);
 	free(io);
@@ -116,6 +254,6 @@ io_source_t swift_source = {
 	swift_read,
 	NULL,
 	swift_tell,
-        NULL,
+        swift_seek,
 	swift_close
 };

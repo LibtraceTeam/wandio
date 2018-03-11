@@ -32,6 +32,7 @@
 #include "swift-keystone.h"
 #include <curl/curl.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 /* Helper for Swift module that does Swift Keystone V3 Auth */
@@ -68,8 +69,56 @@ static int build_auth_request_payload(char *buf, size_t buf_len,
   return written + 1;
 }
 
+#define GETENV(env, dst, req)                                   \
+  do {                                                          \
+    char *tmp;                                                  \
+    if ((tmp = getenv(env)) == NULL) {                          \
+      if (req) success = 0;                                     \
+    } else if (((dst) = strdup(tmp)) == NULL) {                 \
+      return -1;                                                \
+    }                                                           \
+  } while (0)
+
+int keystone_env_parse_creds(keystone_auth_creds_t *creds)
+{
+  int success = 1;
+
+  GETENV("OS_AUTH_URL", creds->auth_url, 1);
+  GETENV("OS_USERNAME", creds->username, 1);
+  GETENV("OS_PASSWORD", creds->password, 1);
+  GETENV("OS_PROJECT_NAME", creds->project, 1);
+  GETENV("OS_PROJECT_DOMAIN_ID", creds->domain_id, 0);
+
+  return success;
+}
+
+int keystone_env_parse_token(keystone_auth_token_t *token)
+{
+  int success = 1;
+
+  GETENV("OS_AUTH_TOKEN", token->token, 1);
+  GETENV("OS_STORAGE_URL", token->storage_url, 1);
+
+  return success;
+}
+
+void keystone_auth_creds_destroy(keystone_auth_creds_t *creds)
+{
+  free(creds->auth_url);
+  free(creds->username);
+  free(creds->password);
+  free(creds->project);
+  free(creds->domain_id);
+}
+
+void keystone_auth_token_destroy(keystone_auth_token_t *token)
+{
+  free(token->token);
+  free(token->storage_url);
+}
+
 int keystone_authenticate(keystone_auth_creds_t *creds,
-                          keystone_auth_result_t *auth)
+                          keystone_auth_token_t *auth)
 {
   CURL *ch = NULL;
   struct curl_slist *headers = NULL;
@@ -96,7 +145,7 @@ int keystone_authenticate(keystone_auth_creds_t *creds,
     goto err;
   }
 
-  
+  // TODO: here
 
   return 0;
 
@@ -105,12 +154,12 @@ int keystone_authenticate(keystone_auth_creds_t *creds,
   return -1;
 }
 
-void keystone_auth_dump(keystone_auth_result_t *auth)
+void keystone_auth_token_dump(keystone_auth_token_t *token)
 {
-  if (auth == NULL || auth->token == NULL || auth->storage_url == NULL) {
+  if (token == NULL || token->token == NULL || token->storage_url == NULL) {
     return;
   }
-  printf("export OS_STORAGE_URL=%s\n", auth->storage_url);
-  printf("export OS_AUTH_TOKEN=%s\n", auth->token);
+  printf("export OS_STORAGE_URL=%s\n", token->storage_url);
+  printf("export OS_AUTH_TOKEN=%s\n", token->token);
 }
 

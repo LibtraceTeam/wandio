@@ -62,20 +62,66 @@ typedef struct {
   /** Swift Storage URL */
   char *storage_url;
 
-} keystone_auth_result_t;
+} keystone_auth_token_t;
+
+/**
+ * Attempt to extract authentication credentials from the environment
+ *
+ * @param creds[out]    Pointer to auth credentials structure to fill
+ * @return 1 if credentials were found, 0 if not, -1 if an error occurred
+ *
+ * This function will return 0 unless ALL required credentials were found (the
+ * only optional credential is the domain ID). It is possible that some
+ * credentials may have been successfully parsed, so it is still important to
+ * pass the credential structure to keystone_auth_creds_free.
+ *
+ * Environment variables searched are as follows:
+ *  - auth_url:  OS_AUTH_URL  [required]
+ *  - username:  OS_USERNAME  [required]
+ *  - password:  OS_PASSWORD  [required]
+ *  - project:   OS_PROJECT   [required]
+ *  - domain_id: OS_PROJECT_DOMAIN_ID [optional]
+ */
+int keystone_env_parse_creds(keystone_auth_creds_t *creds);
+
+/**
+ * Attempt to extract an authentication token from the environment
+ *
+ * @param token[out]     Pointer to an auth result structure to fill
+ * @return 1 if a token and URL was found, 0 if not, -1 if an error occurred
+ */
+int keystone_env_parse_token(keystone_auth_token_t *token);
+
+/**
+ * Free the memory used by the given credentials
+ *
+ * @param creds         Pointer to auth credentials structure
+ *
+ * This function **does not** free the structure itself.
+ */
+void keystone_auth_creds_destroy(keystone_auth_creds_t *creds);
+
+/**
+ * Free the memory used by the given auth token
+ *
+ * @param token         Pointer to auth token structure
+ *
+ * This function **does not** free the structure itself.
+ */
+void keystone_auth_token_destroy(keystone_auth_token_t *token);
 
 /**
  * Perform Keystone V3 authentication
  *
  * @param creds         Authentication credentials
- * @param auth[out]     Point to auth result structure to fill
+ * @param token[out]    Pointer to auth token result structure to fill
  * @return 1 if authentication was successful, 0 if it failed, -1 if an error
  * occurred.
  *
  * @TODO: consider adding an error message to the result struct?
  */
 int keystone_authenticate(keystone_auth_creds_t *creds,
-                          keystone_auth_result_t *auth);
+                          keystone_auth_token_t *token);
 
 /**
  * Dump the given auth token to stdout.
@@ -83,7 +129,7 @@ int keystone_authenticate(keystone_auth_creds_t *creds,
  *
  * @param auth          pointer to a valid authentication result structure.
  */
-void keystone_auth_dump(keystone_auth_result_t *auth);
+void keystone_auth_token_dump(keystone_auth_token_t *token);
 
 /** Free a token result */
 
