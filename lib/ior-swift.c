@@ -193,13 +193,11 @@ io_t *swift_open(const char *filename)
         if ((auth_hdr = build_auth_token_hdr(DATA(io)->token.token)) == NULL) {
                 goto err;
         }
-        fprintf(stderr, "DEBUG: hdr: '%s'\n", auth_hdr);
 
         // build the full HTTP URL
         if ((http_url = build_http_url(DATA(io))) == NULL) {
                 goto err;
         }
-        fprintf(stderr, "DEBUG: url: '%s'\n", http_url);
 
         // open the child reader!
         if ((DATA(io)->http_reader =
