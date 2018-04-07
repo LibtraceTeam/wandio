@@ -278,7 +278,7 @@ static int64_t http_read(io_t *io, void *buffer, int64_t len)
 			rest -= DATA(io)->l_buf - DATA(io)->p_buf;
 			DATA(io)->p_buf = DATA(io)->l_buf;
 			ret = fill_buffer(io);
-			if (ret == 0) break;
+			if (ret <= 0) break;
 		}
 	}
 	return len - rest;
