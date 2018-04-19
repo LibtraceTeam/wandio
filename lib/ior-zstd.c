@@ -130,6 +130,7 @@ static void zstd_close(io_t *io)
 {
     ZSTD_freeDStream(DATA(io)->stream);
     wandio_destroy(DATA(io)->parent);
+    free(io->data);
     free(io);
 }
 
