@@ -70,6 +70,9 @@ struct http_t {
   /* Total length of the file */
   int64_t total_length;
 
+  /* URL of the remote file */
+  const char * url;
+
         /* max buffer size; CURL_MAX_WRITE_SIZE*2 is recommended */
 	int m_buf;
 
@@ -85,9 +88,6 @@ struct http_t {
 	int done_reading;
 };
 
-/* URL of the remote file */
-const char * url;
-
 extern io_source_t http_source;
 
 #define DATA(io) ((struct http_t *)((io)->data))
@@ -95,7 +95,7 @@ extern io_source_t http_source;
 #define HTTP_DEF_BUFLEN   0x8000
 #define HTTP_MAX_SKIP     (HTTP_DEF_BUFLEN<<1)
 
-io_t *init_io(io_t *io);
+io_t *init_io(io_t *io, const char *filename);
 io_t *http_open(const char *filename);
 static int64_t http_read(io_t *io, void *buffer, int64_t len);
 static int64_t http_tell(io_t *io);
@@ -178,7 +178,7 @@ static int fill_buffer(io_t *io)
         if(DATA(io)->done_reading != 1 && DATA(io)->l_buf == 0){
           // read unfinished, need to restart http instance
           int64_t ptr = DATA(io)->off0 + DATA(io)->p_buf + DATA(io)->l_buf;
-          if(!init_io(io)){
+          if(!init_io(io, NULL)){
             // re-initiate IO failed
             return -1;
           }
@@ -191,8 +191,13 @@ static int fill_buffer(io_t *io)
 io_t *http_open(const char *filename)
 {
 	io_t *io = malloc(sizeof(io_t));
-  url = filename;
-  if(!init_io(io)){
+	io->data = calloc(1, sizeof(struct http_t));
+  if (!io->data) {
+    free(io);
+    return NULL;
+  }
+
+  if(!init_io(io, filename)){
     return NULL;
   }
 
@@ -204,24 +209,19 @@ io_t *http_open(const char *filename)
   return io;
 }
 
-io_t *init_io(io_t *io){
+io_t *init_io(io_t *io, const char *filename){
         if (!io) return NULL;
-        if(io->data){
-          // free data if already exists
-          free(io->data);
-        }
         if(DATA(io)->buf){
           // free buffer if already exists
           free(DATA(io)->buf);
         }
-	io->data = malloc(sizeof(struct http_t));
-        if (!io->data) {
-                free(io);
-                return NULL;
-        }
-        memset(io->data, 0, sizeof(struct http_t));
 
         io->source = &http_source;
+
+        /* set url */
+        if(filename != NULL){
+          DATA(io) -> url = filename;
+        }
 
         /* set up global curl structures (see note above) */
         pthread_mutex_lock(&cg_lock);
@@ -233,7 +233,7 @@ io_t *init_io(io_t *io){
 
         DATA(io)->multi = curl_multi_init();
         DATA(io)->curl  = curl_easy_init();
-        curl_easy_setopt(DATA(io)->curl, CURLOPT_URL, url);
+        curl_easy_setopt(DATA(io)->curl, CURLOPT_URL, DATA(io)->url);
         curl_easy_setopt(DATA(io)->curl, CURLOPT_WRITEDATA, io);
         curl_easy_setopt(DATA(io)->curl, CURLOPT_VERBOSE, 0L);
         curl_easy_setopt(DATA(io)->curl, CURLOPT_NOSIGNAL, 1L);
