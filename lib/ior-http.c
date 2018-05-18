@@ -95,7 +95,7 @@ extern io_source_t http_source;
 #define HTTP_DEF_BUFLEN   0x8000
 #define HTTP_MAX_SKIP     (HTTP_DEF_BUFLEN<<1)
 
-io_t *init_io(io_t *io, const char *filename);
+io_t *init_io(io_t *io);
 io_t *http_open(const char *filename);
 static int64_t http_read(io_t *io, void *buffer, int64_t len);
 static int64_t http_tell(io_t *io);
@@ -178,7 +178,7 @@ static int fill_buffer(io_t *io)
         if(DATA(io)->done_reading != 1 && DATA(io)->l_buf == 0){
           // read unfinished, need to restart http instance
           int64_t ptr = DATA(io)->off0 + DATA(io)->p_buf + DATA(io)->l_buf;
-          if(!init_io(io, NULL)){
+          if(!init_io(io)){
             // re-initiate IO failed
             return -1;
           }
@@ -197,7 +197,9 @@ io_t *http_open(const char *filename)
     return NULL;
   }
 
-  if(!init_io(io, filename)){
+  /* set url */
+  DATA(io) -> url = filename;
+  if(!init_io(io)){
     return NULL;
   }
 
@@ -209,7 +211,7 @@ io_t *http_open(const char *filename)
   return io;
 }
 
-io_t *init_io(io_t *io, const char *filename){
+io_t *init_io(io_t *io){
         if (!io) return NULL;
         if(DATA(io)->buf){
           // free buffer if already exists
@@ -217,11 +219,6 @@ io_t *init_io(io_t *io, const char *filename){
         }
 
         io->source = &http_source;
-
-        /* set url */
-        if(filename != NULL){
-          DATA(io) -> url = filename;
-        }
 
         /* set up global curl structures (see note above) */
         pthread_mutex_lock(&cg_lock);
