@@ -184,7 +184,7 @@ static int fill_buffer(io_t *io)
         if(DATA(io)->done_reading != 1 && DATA(io)->l_buf == 0){
           // reading unfinished, need to restart http instance
           int64_t ptr = DATA(io)->off0 + DATA(io)->p_buf + DATA(io)->l_buf;
-          if(!(init_io(io) && prepare(io))){
+          if(!init_io(io) || CURLE_OK != prepare(io)){
             // re-initiate IO failed
             printf("re-initiate IO failed\n");
           }
