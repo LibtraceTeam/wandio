@@ -37,11 +37,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* Libwandio IO module implementing an OpenStack Swift reader
- */
+/* Libwandio IO module implementing an OpenStack Swift reader */
 
 struct swift_t {
-
         // Name of the Swift container to read
         char *container;
 
@@ -148,6 +146,38 @@ static char *build_http_url(struct swift_t *s)
         return url;
 }
 
+static int get_token(struct swift_t *s)
+{
+        // first see if the token is explicitly loaded into the env
+        if (keystone_env_parse_token(&s->token) == 1) {
+                // then let's use it
+                return 0;
+        }
+
+        // ok, so let's see if there are auth credentials available
+        if (keystone_env_parse_creds(&s->creds) != 1) {
+                // no credentials available, nothing we can do
+                fprintf(stderr,
+                        "ERROR: Could not find either Keystone v3 "
+                        "authentication environment variables\n"
+                        "  (OS_AUTH_URL, OS_USERNAME, OS_PASSWORD, etc.), "
+                        "or auth token variables \n"
+                        "  (OS_AUTH_TOKEN, OS_STORAGE_URL).\n");
+                return -1;
+        }
+
+        // alright, we have credentials, ask keystone helper to get a token
+        if (keystone_authenticate(&s->creds, &s->token) != 1) {
+                fprintf(stderr,
+                        "ERROR: Swift (Keystone v3) authentication failed. "
+                        "Check credentials and retry\n");
+                return -1;
+        }
+
+        // we now have a token that we can at least try and use
+        return 0;
+}
+
 io_t *swift_open(const char *filename)
 {
 	io_t *io = malloc(sizeof(io_t));
@@ -171,18 +201,9 @@ io_t *swift_open(const char *filename)
                 return NULL;
         }
 
-        // parse the environment variables that we support
-        if (keystone_env_parse_token(&DATA(io)->token) != 1) {
-                fprintf(stderr,
-                        "ERROR: Could not find required OS_AUTH_TOKEN and/or "
-                        "OS_STORAGE_URL environment variables\n");
-                swift_close(io);
-                return NULL;
+        if (get_token(DATA(io)) != 0) {
+                goto err;
         }
-
-        // TODO: add support for directly obtaining token from keystone using
-        // credentials. for now we'll have to use the python client to get a
-        // token and then export into the environment.
 
         // DEBUG:
         // keystone_auth_token_dump(&DATA(io)->token);

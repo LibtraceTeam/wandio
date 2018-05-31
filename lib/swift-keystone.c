@@ -37,47 +37,71 @@
 
 /* Helper for Swift module that does Swift Keystone V3 Auth */
 
-#define DEBUG_CURL 1L
+#define DEBUG_CURL 0L
 
 #define BUFLEN 1024
-#define AUTH_REQ_TMPL                             \
-  "{"                                             \
-  "  \"auth\": {"                                 \
-  "    \"identity\": {"                          \
-  "      \"methods\": [\"password\"],"           \
-  "      \"password\": {"                        \
-  "        \"user\": {"                          \
-  "          \"name\": \"%s\","                  \
-  "          \"domain\": { \"id\": \"%s\" },"    \
-  "          \"password\" \"%s\""                \
-  "        }"                                    \
-  "      }"                                      \
-  "    }"                                        \
-  "  }"                                          \
-  "}"
-
-static int build_auth_request_payload(char *buf, size_t buf_len,
-                                      keystone_auth_creds_t *creds)
-{
-  size_t written;
-  if ((written = snprintf(buf, buf_len, AUTH_REQ_TMPL,
-                          creds->username, creds->domain_id,
-                          creds->password)) >= buf_len) {
-    return -1;
-  }
-
-  return written + 1;
-}
 
 #define GETENV(env, dst, req)                                   \
   do {                                                          \
     char *tmp;                                                  \
     if ((tmp = getenv(env)) == NULL) {                          \
       if (req) success = 0;                                     \
-    } else if (((dst) = strdup(tmp)) == NULL) {                 \
-      return -1;                                                \
+    } else {                                                    \
+      if (!strlen(tmp)) {                                       \
+        success = 0;                                            \
+      }                                                         \
+      else if (((dst) = strdup(tmp)) == NULL) {                 \
+        return -1;                                              \
+      }                                                         \
     }                                                           \
   } while (0)
+
+#define AUTH_REQ_TMPL                             \
+  "{"                                             \
+  "  \"auth\": {"                                 \
+  "    \"identity\": {"                           \
+  "      \"methods\": [\"password\"],"            \
+  "      \"password\": {"                         \
+  "        \"user\": {"                           \
+  "          \"name\": \"%s\","                   \
+  "          \"domain\": { \"id\": \"%s\" },"     \
+  "          \"password\": \"%s\""                \
+  "        }"                                     \
+  "      }"                                       \
+  "    }"                                         \
+  "  }"                                           \
+  "}"
+
+struct response_wrap {
+  char *response;
+  size_t response_len;
+};
+
+static size_t auth_write_cb(char *ptr, size_t size, size_t nmemb, void *data)
+{
+  struct response_wrap *rw = (struct response_wrap*)data;
+  ssize_t nbytes = size * nmemb;
+
+  // our overall response shouldn't be very big, so to simplify things we'll
+  // build a single string and then process that once all the data has been
+  // received.
+  if ((rw->response = realloc(rw->response, (rw->response_len + nbytes))) ==
+      NULL) {
+    return 0;
+  }
+  memcpy(rw->response + rw->response_len, ptr, nbytes);
+  rw->response_len += nbytes;
+
+  return nbytes;
+}
+
+static int process_auth_response(struct response_wrap *rw,
+                                 keystone_auth_token_t *token)
+{
+  fprintf(stderr, "DEBUG: >>\n%s\n<<\n", rw->response);
+  (void)token;
+  return 0;
+}
 
 int keystone_env_parse_creds(keystone_auth_creds_t *creds)
 {
@@ -118,13 +142,17 @@ void keystone_auth_token_destroy(keystone_auth_token_t *token)
 }
 
 int keystone_authenticate(keystone_auth_creds_t *creds,
-                          keystone_auth_token_t *auth)
+                          keystone_auth_token_t *token)
 {
   CURL *ch = NULL;
   struct curl_slist *headers = NULL;
+  char auth_url_buf[BUFLEN];
   char buf[BUFLEN];
+  ssize_t buf_len;
+  struct response_wrap rw = { NULL, 0 };
+  int rc = 0; // indicates auth failed (-1 indicates error)
 
-  memset(auth, 0, sizeof(*auth));
+  memset(token, 0, sizeof(*token));
 
   curl_helper_safe_global_init();
 
@@ -132,25 +160,54 @@ int keystone_authenticate(keystone_auth_creds_t *creds,
     goto err;
   }
 
-  // set options
-  if (curl_easy_setopt(ch, CURLOPT_VERBOSE, DEBUG_CURL) != CURLE_OK ||
-      curl_easy_setopt(ch, CURLOPT_URL, creds->auth_url) != CURLE_OK ||
-      curl_easy_setopt(ch, CURLOPT_POST, 1L) != CURLE_OK) {
+  // we need the "/auth/tokens endpoint on the auth server
+  if (snprintf(auth_url_buf, sizeof(buf), "%s/auth/tokens", creds->auth_url) >=
+      BUFLEN) {
     goto err;
   }
 
   headers = curl_slist_append(headers, "Content-Type: application/json");
 
-  if (build_auth_request_payload(buf, sizeof(buf), creds) != 0) {
+  if ((buf_len = snprintf(buf, sizeof(buf), AUTH_REQ_TMPL, creds->username,
+                          creds->domain_id, creds->password)) >= BUFLEN) {
     goto err;
   }
 
-  // TODO: here
+  // set up curl
+  if (curl_easy_setopt(ch, CURLOPT_VERBOSE, DEBUG_CURL) != CURLE_OK ||
+      curl_easy_setopt(ch, CURLOPT_URL, auth_url_buf) != CURLE_OK ||
+      curl_easy_setopt(ch, CURLOPT_POST, 1L) != CURLE_OK ||
+      curl_easy_setopt(ch, CURLOPT_HTTPHEADER, headers) != CURLE_OK ||
+      curl_easy_setopt(ch, CURLOPT_POSTFIELDS, buf) != CURLE_OK ||
+      curl_easy_setopt(ch, CURLOPT_POSTFIELDSIZE, buf_len) != CURLE_OK ||
+      curl_easy_setopt(ch, CURLOPT_WRITEDATA, &rw) != CURLE_OK ||
+      curl_easy_setopt(ch, CURLOPT_WRITEFUNCTION, auth_write_cb) != CURLE_OK) {
+    goto err;
+  }
 
-  return 0;
+  // make the request
+  if (curl_easy_perform(ch) != CURLE_OK) {
+    goto err;
+  }
+
+  // now handle the response json
+  if (process_auth_response(&rw, token) != 0) {
+    goto err;
+  }
+
+  // at this point we should have a valid token
+  if (token->storage_url != NULL && token->token != NULL) {
+    rc = 1;
+  }
+
+  curl_slist_free_all(headers);
+  free(rw.response);
+
+  return rc;
 
  err:
   curl_slist_free_all(headers);
+  free(rw.response);
   return -1;
 }
 
