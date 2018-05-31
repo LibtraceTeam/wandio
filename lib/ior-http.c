@@ -165,6 +165,12 @@ static int fill_buffer(io_t *io)
                 curl_easy_pause(DATA(io)->curl, CURLPAUSE_CONT);
                 /* FIXME: check return code */
                 rc = curl_multi_perform(DATA(io)->multi, &n_running);
+                if(DATA(io)->total_length <0){
+                    // update file length.
+                    double cl;
+                    curl_easy_getinfo(DATA(io) -> curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &cl);
+                    DATA(io) -> total_length = (unsigned long long int) cl;
+                }
         } while (n_running &&
                  DATA(io)->l_buf < DATA(io)->m_buf - CURL_MAX_WRITE_SIZE);
 
@@ -176,13 +182,14 @@ static int fill_buffer(io_t *io)
         }
 
         if(DATA(io)->done_reading != 1 && DATA(io)->l_buf == 0){
-          // read unfinished, need to restart http instance
+          // reading unfinished, need to restart http instance
           int64_t ptr = DATA(io)->off0 + DATA(io)->p_buf + DATA(io)->l_buf;
-          if(!init_io(io)){
+          if(!(init_io(io) && prepare(io))){
             // re-initiate IO failed
-            return -1;
+            printf("re-initiate IO failed\n");
           }
           http_seek(io, ptr, SEEK_SET);
+          return -1;
         }
 
 	return DATA(io)->l_buf;
@@ -199,6 +206,7 @@ io_t *http_open(const char *filename)
 
   /* set url */
   DATA(io) -> url = filename;
+  DATA(io) -> total_length = -2;
   if(!init_io(io)){
     return NULL;
   }
@@ -244,10 +252,6 @@ io_t *init_io(io_t *io){
 	DATA(io)->buf = (uint8_t*)calloc(DATA(io)->m_buf, 1);
 
   // FIXME: check return value. deal with cases where file length not available.
-  double cl;
-  curl_easy_getinfo(DATA(io)->curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &cl);
-  unsigned long long int total_length = (unsigned long long int) cl;
-  DATA(io)->total_length = total_length;
 
   return io;
 }
@@ -256,7 +260,7 @@ static int64_t http_read(io_t *io, void *buffer, int64_t len)
 {
 	ssize_t rest = len;
 	if (DATA(io)->l_buf == 0) return 0; // end-of-file
-	while (rest) {
+    while (rest) {
 		if (DATA(io)->l_buf - DATA(io)->p_buf >= rest) {
 			if (buffer) {
                                 memcpy((uint8_t*)buffer + (len - rest),
@@ -275,7 +279,12 @@ static int64_t http_read(io_t *io, void *buffer, int64_t len)
 			rest -= DATA(io)->l_buf - DATA(io)->p_buf;
 			DATA(io)->p_buf = DATA(io)->l_buf;
 			ret = fill_buffer(io);
-			if (ret <= 0) break;
+            if(ret == -1){
+              continue;
+            }
+			if (ret < -1){
+              break;
+            } 
 		}
 	}
 	return len - rest;
