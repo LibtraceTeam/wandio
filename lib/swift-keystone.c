@@ -408,7 +408,9 @@ int keystone_authenticate(keystone_auth_creds_t *creds,
   char buf[BUFLEN];
   ssize_t buf_len;
   struct response_wrap rw = { NULL, 0 };
+  char curl_error[CURL_ERROR_SIZE];
   int rc = 0; // indicates auth failed (-1 indicates error)
+  long response_code;
 
   memset(token, 0, sizeof(*token));
 
@@ -437,6 +439,7 @@ int keystone_authenticate(keystone_auth_creds_t *creds,
 
   // set up curl
   if (curl_easy_setopt(ch, CURLOPT_VERBOSE, DEBUG_CURL) != CURLE_OK ||
+      curl_easy_setopt(ch, CURLOPT_ERRORBUFFER, curl_error) != CURLE_OK ||
       curl_easy_setopt(ch, CURLOPT_URL, auth_url_buf) != CURLE_OK ||
       curl_easy_setopt(ch, CURLOPT_POST, 1L) != CURLE_OK ||
       curl_easy_setopt(ch, CURLOPT_HTTPHEADER, headers) != CURLE_OK ||
@@ -451,12 +454,33 @@ int keystone_authenticate(keystone_auth_creds_t *creds,
 
   // make the request
   if (curl_easy_perform(ch) != CURLE_OK) {
+    fprintf(stderr, "ERROR: Authentication request to %s failed\n",
+            auth_url_buf);
+    fprintf(stderr, "ERROR: %s\n", curl_error);
     goto err;
   }
 
   if (DEBUG_CURL) {
     fprintf(stderr, "DEBUG: Response:\n%s\n", rw.response);
   }
+
+  curl_easy_getinfo(ch, CURLINFO_RESPONSE_CODE, &response_code);
+  // explicitly handle some common possible errors
+  // (this is just to provide better error messages, since just trying to parse
+  // the response should suffice to detect that we don't have a token)
+  if (response_code == 401) {
+    // this is the "normal" couldn't authenticate error
+    goto err;
+  } else if (response_code == 404) {
+    fprintf(stderr, "ERROR: Authentication endpoint '%s' does not exist\n",
+            auth_url_buf);
+    goto err;
+  } else if (response_code != 201) {
+    fprintf(stderr, "ERROR: Unexpected response code (%ld) from Keystone\n",
+            response_code);
+    goto err;
+  }
+  // this is a 201 response so the token should have been created
 
   // now handle the response json
   if (process_auth_response(&rw, token) != 0) {
