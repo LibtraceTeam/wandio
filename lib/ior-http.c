@@ -281,8 +281,7 @@ static int64_t http_read(io_t *io, void *buffer, int64_t len)
 			ret = fill_buffer(io);
             if(ret == -1){
               continue;
-            }
-			if (ret < -1){
+            } else if (ret <= 0){
               break;
             } 
 		}
