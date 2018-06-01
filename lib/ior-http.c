@@ -169,7 +169,7 @@ static int fill_buffer(io_t *io)
                     // update file length.
                     double cl;
                     curl_easy_getinfo(DATA(io) -> curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &cl);
-                    DATA(io) -> total_length = (unsigned long long int) cl;
+                    DATA(io) -> total_length = (int64_t) cl;
                 }
         } while (n_running &&
                  DATA(io)->l_buf < DATA(io)->m_buf - CURL_MAX_WRITE_SIZE);
@@ -206,7 +206,7 @@ io_t *http_open(const char *filename)
 
   /* set url */
   DATA(io) -> url = filename;
-  DATA(io) -> total_length = -2;
+  DATA(io) -> total_length = -1;
   if(!init_io(io)){
     return NULL;
   }
