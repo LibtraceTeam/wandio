@@ -129,6 +129,11 @@ static int64_t lzma_wwrite(iow_t *iow, const char *buffer, int64_t len)
 	return len-DATA(iow)->strm.avail_in;
 }
 
+static int lzma_wflush(iow_t *iow) {
+        /* TODO implement this */
+        return 0;
+}
+
 static void lzma_wclose(iow_t *iow)
 {
 	lzma_ret res;
@@ -161,6 +166,7 @@ static void lzma_wclose(iow_t *iow)
 iow_source_t lzma_wsource = {
 	"xz",
 	lzma_wwrite,
+        lzma_wflush,
 	lzma_wclose
 };
 

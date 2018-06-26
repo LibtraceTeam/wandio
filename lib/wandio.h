@@ -137,6 +137,12 @@ typedef struct {
 	 */
 	int64_t (*write)(iow_t *iow, const char *buffer, int64_t len);
 
+        /** Forces an IO writer to flush any buffered output to the file.
+         * @param iow           The IO writer to flush
+         * @return -1 if an error occurs.
+         */
+        int (*flush)(iow_t *iow);
+
 	/** Closes an IO writer. This function should free the IO writer. 
 	 *
 	 * @param iow		The IO writer to close
@@ -318,6 +324,8 @@ iow_t *wandio_wcreate(const char *filename, int compression_type, int compressio
  * @return The amount of data written, or -1 if an error occurs
  */
 int64_t wandio_wwrite(iow_t *iow, const void *buffer, int64_t len);
+
+int wandio_wflush(iow_t *iow);
 
 /** Destroys a libwandio IO writer, closing the file and freeing the writer
  * structure.

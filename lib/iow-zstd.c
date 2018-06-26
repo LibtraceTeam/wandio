@@ -105,6 +105,11 @@ static int64_t zstd_wwrite(iow_t *iow, const char *buffer, int64_t len)
     return DATA(iow)->input_buffer.pos;
 }
 
+static int zstd_wflush(iow_t *iow) {
+        /* TODO implement this */
+        return 0;
+}
+
 static void zstd_wclose(iow_t *iow)
 {
     size_t result = 1;
@@ -131,6 +136,7 @@ static void zstd_wclose(iow_t *iow)
 iow_source_t zstd_wsource = {
         "zstdw",
         zstd_wwrite,
+        zstd_wflush,
         zstd_wclose
 };
 
