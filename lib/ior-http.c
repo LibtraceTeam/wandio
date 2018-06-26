@@ -53,6 +53,10 @@
 static pthread_mutex_t cg_lock = PTHREAD_MUTEX_INITIALIZER;
 static int cg_init_cnt = 0;
 
+#define FILL_FINISHED     0
+#define FILL_RETRY       -1
+#define FILL_RETRY_ERROR -2
+
 struct http_t {
          /* cURL multi handler */
         CURLM *multi;
@@ -133,7 +137,7 @@ static int fill_buffer(io_t *io)
 	assert(DATA(io)->p_buf == DATA(io)->l_buf);
 	DATA(io)->off0 += DATA(io)->l_buf;
 	DATA(io)->p_buf = DATA(io)->l_buf = 0;
-	if (DATA(io)->done_reading) return 0;
+	if (DATA(io)->done_reading) return FILL_FINISHED;
 
         int n_running, rc;
         fd_set fdr, fdw, fde;
@@ -186,10 +190,10 @@ static int fill_buffer(io_t *io)
           int64_t ptr = DATA(io)->off0 + DATA(io)->p_buf + DATA(io)->l_buf;
           if(!init_io(io) || CURLE_OK != prepare(io)){
             // re-initiate IO failed
-            printf("re-initiate IO failed\n");
+            return FILL_RETRY_ERROR;
           }
           http_seek(io, ptr, SEEK_SET);
-          return -1;
+          return FILL_RETRY;
         }
 
 	return DATA(io)->l_buf;
@@ -211,7 +215,7 @@ io_t *http_open(const char *filename)
     return NULL;
   }
 
-	if (prepare(io) < 0 || fill_buffer(io) <= 0) {
+	if (prepare(io) < 0 || fill_buffer(io) < 0) {
 		http_close(io);
 		return NULL;
 	}
@@ -279,10 +283,14 @@ static int64_t http_read(io_t *io, void *buffer, int64_t len)
 			rest -= DATA(io)->l_buf - DATA(io)->p_buf;
 			DATA(io)->p_buf = DATA(io)->l_buf;
 			ret = fill_buffer(io);
-            if(ret == -1){
-              continue;
-            } else if (ret <= 0){
+            if(ret == FILL_FINISHED){
               break;
+            } else if (ret == FILL_RETRY){
+              continue;
+            } else if (ret == FILL_RETRY_ERROR){
+              return -1;
+            } else {
+              return -2;
             } 
 		}
 	}
