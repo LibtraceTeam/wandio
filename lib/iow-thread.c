@@ -60,6 +60,7 @@ struct buffer_t {
 	char buffer[BUFFERSIZE];	/* The buffer itself */
 	int len;			/* The size of the buffer */
 	enum { EMPTY = 0, FULL = 1 } state;	/* Is the buffer in use? */
+        bool flush;
 };
 
 struct state_t {
@@ -119,19 +120,22 @@ static void *thread_consumer(void *userdata)
 			pthread_cond_wait(&DATA(state)->data_ready,
 					&DATA(state)->mutex);
 		}
-		
 		/* Empty the buffer using the child writer */
 		pthread_mutex_unlock(&DATA(state)->mutex);
 		wandio_wwrite(
 				DATA(state)->iow,
 				DATA(state)->buffer[buffer].buffer,
 				DATA(state)->buffer[buffer].len);
+                if (DATA(state)->buffer[buffer].flush) {
+                        wandio_wflush(DATA(state)->iow);
+                }
 		pthread_mutex_lock(&DATA(state)->mutex);
 
 		/* If we've not reached the end of the file keep going */
 		running = ( DATA(state)->buffer[buffer].len > 0 );
 		DATA(state)->buffer[buffer].len = 0;
 		DATA(state)->buffer[buffer].state = EMPTY;
+                DATA(state)->buffer[buffer].flush = false;
 
 		/* Signal that we've freed up another buffer for the main
 		 * thread to copy data into */
@@ -220,6 +224,7 @@ static int64_t thread_wwrite(iow_t *state, const char *buffer, int64_t len)
 		 * to do */
 		if (DATA(state)->offset >= (int64_t)sizeof(OUTBUFFER(state).buffer)) {
 			OUTBUFFER(state).state = FULL;
+                        OUTBUFFER(state).flush = false;
 			pthread_cond_signal(&DATA(state)->data_ready);
 			DATA(state)->offset = 0;
 			newbuffer = (newbuffer+1) % BUFFERS;
@@ -230,6 +235,21 @@ static int64_t thread_wwrite(iow_t *state, const char *buffer, int64_t len)
 
 	pthread_mutex_unlock(&DATA(state)->mutex);
 	return copied;
+}
+
+static int thread_wflush(iow_t *iow) {
+        int64_t flushed = 0;
+	pthread_mutex_lock(&DATA(iow)->mutex);
+	if (DATA(iow)->offset > 0) {
+                flushed = DATA(iow)->offset;
+                OUTBUFFER(iow).state = FULL;
+                OUTBUFFER(iow).flush = true;
+                pthread_cond_signal(&DATA(iow)->data_ready);
+                DATA(iow)->offset = 0;
+                DATA(iow)->out_buffer = (DATA(iow)->out_buffer+1) % BUFFERS;        }
+
+	pthread_mutex_unlock(&DATA(iow)->mutex);
+        return (int)flushed;
 }
 
 static void thread_wclose(iow_t *iow)
@@ -251,5 +271,6 @@ static void thread_wclose(iow_t *iow)
 iow_source_t thread_wsource = {
 	"threadw",
 	thread_wwrite,
+        thread_wflush,
 	thread_wclose
 };

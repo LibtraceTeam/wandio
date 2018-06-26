@@ -129,6 +129,11 @@ static int64_t bz_wwrite(iow_t *iow, const char *buffer, int64_t len)
 	return len-DATA(iow)->strm.avail_in;
 }
 
+static int bz_wflush(iow_t *iow) {
+        /* TODO implement this */
+        return -1;
+}
+
 static void bz_wclose(iow_t *iow)
 {
 	while (BZ2_bzCompress(&DATA(iow)->strm, BZ_FINISH) == BZ_OK) {
@@ -151,6 +156,7 @@ static void bz_wclose(iow_t *iow)
 iow_source_t bz_wsource = {
 	"bzw",
 	bz_wwrite,
+        bz_wflush,
 	bz_wclose
 };
 

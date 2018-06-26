@@ -121,7 +121,7 @@ static int64_t zlib_wwrite(iow_t *iow, const char *buffer, int64_t len)
 			DATA(iow)->strm.avail_out = sizeof(DATA(iow)->outbuff);
 		}
 		/* Decompress some data into the output buffer */
-		int err=deflate(&DATA(iow)->strm, 0);
+		int err=deflate(&DATA(iow)->strm, Z_NO_FLUSH);
 		switch(err) {
 			case Z_OK:
 				DATA(iow)->err = ERR_OK;
@@ -134,10 +134,38 @@ static int64_t zlib_wwrite(iow_t *iow, const char *buffer, int64_t len)
 	return len-DATA(iow)->strm.avail_in;
 }
 
+static int zlib_wflush(iow_t *iow) {
+
+        int res;
+
+        res = deflate(&DATA(iow)->strm, Z_SYNC_FLUSH);
+        if (res == Z_STREAM_ERROR) {
+                fprintf(stderr, "Z_STREAM_ERROR while flushing output\n");
+                DATA(iow)->err = ERR_ERROR;
+                return -1;
+        }
+
+        res = wandio_wwrite(DATA(iow)->child,
+                        (char*)DATA(iow)->outbuff,
+                        sizeof(DATA(iow)->outbuff)-DATA(iow)->strm.avail_out);
+        if (res < 0) {
+                DATA(iow)->err = ERR_ERROR;
+                return res;
+        }
+        if ((res = wandio_wflush(DATA(iow)->child)) < 0) {
+                DATA(iow)->err = ERR_ERROR;
+                return res;
+        }
+
+        DATA(iow)->strm.next_out = DATA(iow)->outbuff;
+        DATA(iow)->strm.avail_out = sizeof(DATA(iow)->outbuff);
+        return res;
+}
+
 static void zlib_wclose(iow_t *iow)
 {
 	int res;
-	
+
 	while (1) {
 		res = deflate(&DATA(iow)->strm, Z_FINISH);
 
@@ -167,6 +195,7 @@ static void zlib_wclose(iow_t *iow)
 iow_source_t zlib_wsource = {
 	"zlibw",
 	zlib_wwrite,
+        zlib_wflush,
 	zlib_wclose
 };
 

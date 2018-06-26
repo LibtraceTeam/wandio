@@ -205,9 +205,9 @@ static int64_t stdio_wwrite(iow_t *iow, const char *buffer, int64_t len)
 	return len;
 }
 
-static void stdio_wclose(iow_t *iow)
-{
-	long err;
+static int stdio_wflush(iow_t *iow) {
+
+	int err;
 	/* Now, there might be some non multiple of the direct filesize left over, if so turn off
  	 * O_DIRECT and write the final chunk.
  	 */
@@ -215,10 +215,19 @@ static void stdio_wclose(iow_t *iow)
 	err=fcntl(DATA(iow)->fd, F_GETFL);
 	if (err != -1 && (err & O_DIRECT) != 0) {
 		fcntl(DATA(iow)->fd,F_SETFL, err & ~O_DIRECT);
-	}
+	} else if (err < 0) {
+                return err;
+        }
 #endif
 	err=write(DATA(iow)->fd, DATA(iow)->buffer, DATA(iow)->offset);
 	DATA(iow)->offset = 0;
+        return err;
+
+}
+
+static void stdio_wclose(iow_t *iow)
+{
+        stdio_wflush(iow);
 	close(DATA(iow)->fd);
 	free(iow->data);
 	free(iow);
@@ -227,5 +236,6 @@ static void stdio_wclose(iow_t *iow)
 iow_source_t stdio_wsource = {
 	"stdiow",
 	stdio_wwrite,
+        stdio_wflush,
 	stdio_wclose
 };

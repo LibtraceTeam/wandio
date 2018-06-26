@@ -509,6 +509,11 @@ static void shutdown_thread(iow_t *iow, struct lzothread_t *thread)
 	pthread_join(thread->thread,NULL);
 }
 
+static int lzo_wflush(iow_t *iow) {
+        /* TODO implement this */
+        return 0;
+}
+
 static void lzo_wclose(iow_t *iow)
 {
 	const uint32_t zero = 0;
@@ -548,6 +553,7 @@ static void lzo_wclose(iow_t *iow)
 iow_source_t lzo_wsource = {
 	"lzo",
 	lzo_wwrite,
+        lzo_wflush,
 	lzo_wclose
 };
 

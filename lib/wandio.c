@@ -374,6 +374,10 @@ DLLEXPORT int64_t wandio_wwrite(iow_t *iow, const void *buffer, int64_t len)
 	return iow->source->write(iow,buffer,len); 
 }
 
+DLLEXPORT int wandio_wflush(iow_t *iow) {
+        return iow->source->flush(iow);
+}
+
 DLLEXPORT void wandio_wdestroy(iow_t *iow)
 {
 	iow->source->close(iow);
