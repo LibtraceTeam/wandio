@@ -283,15 +283,17 @@ static int64_t http_read(io_t *io, void *buffer, int64_t len)
 			rest -= DATA(io)->l_buf - DATA(io)->p_buf;
 			DATA(io)->p_buf = DATA(io)->l_buf;
 			ret = fill_buffer(io);
-            if(ret == FILL_FINISHED){
-              break;
-            } else if (ret == FILL_RETRY){
-              continue;
-            } else if (ret == FILL_RETRY_ERROR){
-              return -1;
-            } else {
-              return -2;
-            } 
+            if(ret <= 0){
+                if(ret == FILL_FINISHED){
+                    break;
+                } else if (ret == FILL_RETRY){
+                    continue;
+                } else if (ret == FILL_RETRY_ERROR){
+                    return -1;
+                } else {
+                    return -2;
+                } 
+            }
 		}
 	}
 	return len - rest;
