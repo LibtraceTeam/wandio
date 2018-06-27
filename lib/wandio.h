@@ -54,6 +54,10 @@
  * @version $Id$
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct io_t io_t; /**< Opaque IO handle structure for reading */
 typedef struct iow_t iow_t; /**< Opaque IO handle structure for writing */
 
@@ -335,5 +339,8 @@ int wandio_wflush(iow_t *iow);
 void wandio_wdestroy(iow_t *iow);
 
 /** @} */
+#ifdef __cplusplus
+}
+#endif
 
 #endif
