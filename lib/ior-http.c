@@ -53,6 +53,10 @@
 static pthread_mutex_t cg_lock = PTHREAD_MUTEX_INITIALIZER;
 static int cg_init_cnt = 0;
 
+#define FILL_FINISHED     0
+#define FILL_RETRY       -1
+#define FILL_RETRY_ERROR -2
+
 struct http_t {
          /* cURL multi handler */
         CURLM *multi;
@@ -66,6 +70,12 @@ struct http_t {
         /* offset of the first byte in the buffer; the actual file offset equals
            off0 + p_buf */
         int64_t off0;
+
+  /* Total length of the file */
+  int64_t total_length;
+
+  /* URL of the remote file */
+  const char * url;
 
         /* max buffer size; CURL_MAX_WRITE_SIZE*2 is recommended */
 	int m_buf;
@@ -89,6 +99,7 @@ extern io_source_t http_source;
 #define HTTP_DEF_BUFLEN   0x8000
 #define HTTP_MAX_SKIP     (HTTP_DEF_BUFLEN<<1)
 
+io_t *init_io(io_t *io);
 io_t *http_open(const char *filename);
 static int64_t http_read(io_t *io, void *buffer, int64_t len);
 static int64_t http_tell(io_t *io);
@@ -126,7 +137,7 @@ static int fill_buffer(io_t *io)
 	assert(DATA(io)->p_buf == DATA(io)->l_buf);
 	DATA(io)->off0 += DATA(io)->l_buf;
 	DATA(io)->p_buf = DATA(io)->l_buf = 0;
-	if (DATA(io)->done_reading) return 0;
+	if (DATA(io)->done_reading) return FILL_FINISHED;
 
         int n_running, rc;
         fd_set fdr, fdw, fde;
@@ -158,11 +169,32 @@ static int fill_buffer(io_t *io)
                 curl_easy_pause(DATA(io)->curl, CURLPAUSE_CONT);
                 /* FIXME: check return code */
                 rc = curl_multi_perform(DATA(io)->multi, &n_running);
+                if(DATA(io)->total_length <0){
+                    // update file length.
+                    double cl;
+                    curl_easy_getinfo(DATA(io) -> curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &cl);
+                    DATA(io) -> total_length = (int64_t) cl;
+                }
         } while (n_running &&
                  DATA(io)->l_buf < DATA(io)->m_buf - CURL_MAX_WRITE_SIZE);
 
-        if (DATA(io)->l_buf < DATA(io)->m_buf - CURL_MAX_WRITE_SIZE)
-                DATA(io)->done_reading = 1;
+        if (DATA(io)->l_buf < DATA(io)->m_buf - CURL_MAX_WRITE_SIZE){
+          if(DATA(io)->off0 + DATA(io)->p_buf >= DATA(io)-> total_length){
+            DATA(io)->done_reading = 1;
+          }
+          // if libcurl reads less than a buffer full: 1. read finished; 2. read failed.
+        }
+
+        if(DATA(io)->done_reading != 1 && DATA(io)->l_buf == 0){
+          // reading unfinished, need to restart http instance
+          int64_t ptr = DATA(io)->off0 + DATA(io)->p_buf + DATA(io)->l_buf;
+          if(!init_io(io) || CURLE_OK != prepare(io)){
+            // re-initiate IO failed
+            return FILL_RETRY_ERROR;
+          }
+          http_seek(io, ptr, SEEK_SET);
+          return FILL_RETRY;
+        }
 
 	return DATA(io)->l_buf;
 }
@@ -170,13 +202,33 @@ static int fill_buffer(io_t *io)
 io_t *http_open(const char *filename)
 {
 	io_t *io = malloc(sizeof(io_t));
+	io->data = calloc(1, sizeof(struct http_t));
+  if (!io->data) {
+    free(io);
+    return NULL;
+  }
+
+  /* set url */
+  DATA(io) -> url = filename;
+  DATA(io) -> total_length = -1;
+  if(!init_io(io)){
+    return NULL;
+  }
+
+	if (prepare(io) < 0 || fill_buffer(io) < 0) {
+		http_close(io);
+		return NULL;
+	}
+
+  return io;
+}
+
+io_t *init_io(io_t *io){
         if (!io) return NULL;
-	io->data = malloc(sizeof(struct http_t));
-        if (!io->data) {
-                free(io);
-                return NULL;
+        if(DATA(io)->buf){
+          // free buffer if already exists
+          free(DATA(io)->buf);
         }
-        memset(io->data, 0, sizeof(struct http_t));
 
         io->source = &http_source;
 
@@ -190,7 +242,7 @@ io_t *http_open(const char *filename)
 
         DATA(io)->multi = curl_multi_init();
         DATA(io)->curl  = curl_easy_init();
-        curl_easy_setopt(DATA(io)->curl, CURLOPT_URL, filename);
+        curl_easy_setopt(DATA(io)->curl, CURLOPT_URL, DATA(io)->url);
         curl_easy_setopt(DATA(io)->curl, CURLOPT_WRITEDATA, io);
         curl_easy_setopt(DATA(io)->curl, CURLOPT_VERBOSE, 0L);
         curl_easy_setopt(DATA(io)->curl, CURLOPT_NOSIGNAL, 1L);
@@ -203,19 +255,16 @@ io_t *http_open(const char *filename)
         DATA(io)->m_buf = CURL_MAX_WRITE_SIZE * 2;
 	DATA(io)->buf = (uint8_t*)calloc(DATA(io)->m_buf, 1);
 
-	if (prepare(io) < 0 || fill_buffer(io) <= 0) {
-		http_close(io);
-		return NULL;
-	}
+  // FIXME: check return value. deal with cases where file length not available.
 
-	return io;
+  return io;
 }
 
 static int64_t http_read(io_t *io, void *buffer, int64_t len)
 {
 	ssize_t rest = len;
 	if (DATA(io)->l_buf == 0) return 0; // end-of-file
-	while (rest) {
+    while (rest) {
 		if (DATA(io)->l_buf - DATA(io)->p_buf >= rest) {
 			if (buffer) {
                                 memcpy((uint8_t*)buffer + (len - rest),
@@ -234,7 +283,17 @@ static int64_t http_read(io_t *io, void *buffer, int64_t len)
 			rest -= DATA(io)->l_buf - DATA(io)->p_buf;
 			DATA(io)->p_buf = DATA(io)->l_buf;
 			ret = fill_buffer(io);
-			if (ret <= 0) break;
+            if(ret <= 0){
+                if(ret == FILL_FINISHED){
+                    break;
+                } else if (ret == FILL_RETRY){
+                    continue;
+                } else if (ret == FILL_RETRY_ERROR){
+                    return -1;
+                } else {
+                    return -2;
+                } 
+            }
 		}
 	}
 	return len - rest;
