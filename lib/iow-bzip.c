@@ -131,6 +131,7 @@ static int64_t bz_wwrite(iow_t *iow, const char *buffer, int64_t len)
 
 static int bz_wflush(iow_t *iow) {
         /* TODO implement this */
+        (void) iow; // silence compiler warning
         return -1;
 }
 

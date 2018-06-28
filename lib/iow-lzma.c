@@ -131,6 +131,7 @@ static int64_t lzma_wwrite(iow_t *iow, const char *buffer, int64_t len)
 
 static int lzma_wflush(iow_t *iow) {
         /* TODO implement this */
+        (void) iow; // silence compiler warning
         return 0;
 }
 

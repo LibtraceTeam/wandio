@@ -8,6 +8,7 @@
 *.swp
 config\.*
 configure
+compile
 autom4te.cache/
 depcomp
 install-sh
