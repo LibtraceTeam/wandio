@@ -1,3 +1,15 @@
+Version 1.0.5
+=============
+Thanks to Alistair King, Mingwei Zhang and Robert Zeh for their contributions
+
+ * Added support for reading and writing zstd.
+ * HTTP reads can now be resumed from where they left off.
+ * Added wandio_wflush API for flushing writer output without closing.
+      - implemented for zlib, thread and stdio
+ * wandiocat: fixed crash when the compression method is invalid
+ * Fixed various documentation errors and bad error checks.
+
+
 Version 1.0.4
 =============
 
