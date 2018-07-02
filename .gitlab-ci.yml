@@ -1,0 +1,26 @@
+stages:
+  - build
+
+build-package:
+  stage: build
+  image: ubuntu:xenial
+  script:
+    - export DEBIAN_FRONTEND=noninteractive
+    - export DEBEMAIL='packaging@wand.net.nz' && export DEBFULLNAME='WAND Packaging'
+    - apt-get update
+    - apt-get install -y equivs devscripts dpkg-dev quilt curl apt-transport-https apt-utils ssl-cert ca-certificates gnupg lsb-release debhelper git
+    - apt-get upgrade -y
+    - TAG="git describe --tags"
+    - TAG=$($TAG)
+    - TAG="${TAG//[!0-9.-]/}"
+    - debchange --newversion $TAG -b "New upstream release"
+    - mk-build-deps -i -r -t 'apt-get -f -y --force-yes'
+    - dpkg-buildpackage -b -us -uc -rfakeroot -j4
+    - mkdir -p built-packages/
+    - mv ../*.deb built-packages/
+  artifacts:
+    paths:
+      - built-packages/*
+    expire_in: 1 month
+  only:
+    - tags
