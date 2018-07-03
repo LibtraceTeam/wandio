@@ -216,8 +216,8 @@ AC_ARG_WITH([zstd],
 
 AS_IF([test "x$with_zstd" != "xno"],
 	[
-	AC_CHECK_HEADER(zstd.h, have_zstd=yes, have_zstd=no)
-	], [have_lzma=no])
+	AC_CHECK_LIB(zstd, ZSTD_createDStream, have_zstd=yes, have_zstd=no)
+	], [have_zstd=no])
 
 AS_IF([test "x$have_zstd" = "xyes"], [
 	if test "$ac_cv_lib_zstd_code" != "none required"; then
@@ -229,7 +229,7 @@ AS_IF([test "x$have_zstd" = "xyes"], [
 
 	[AS_IF([test "x$with_zstd" = "xyes"],
 		[AC_MSG_ERROR([zstd requested but not found])])
-	AC_DEFINE(HAVE_LIBZSTD, 0, "Compiled with lzma support")
+	AC_DEFINE(HAVE_LIBZSTD, 0, "Compiled with zstd support")
 	with_zstd=no]
 )
 
