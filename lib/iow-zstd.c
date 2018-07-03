@@ -107,6 +107,7 @@ static int64_t zstd_wwrite(iow_t *iow, const char *buffer, int64_t len)
 
 static int zstd_wflush(iow_t *iow) {
         /* TODO implement this */
+        (void)(iow);
         return 0;
 }
 
