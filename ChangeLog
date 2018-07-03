@@ -1,4 +1,4 @@
-Version 1.0.5
+Version 4.0.0
 =============
 Thanks to Alistair King, Mingwei Zhang and Robert Zeh for their contributions
 
@@ -8,6 +8,8 @@ Thanks to Alistair King, Mingwei Zhang and Robert Zeh for their contributions
       - implemented for zlib, thread and stdio
  * wandiocat: fixed crash when the compression method is invalid
  * Fixed various documentation errors and bad error checks.
+ * Re-versioned to avoid versioning issues with old packages from our libtrace
+   days.
 
 
 Version 1.0.4
