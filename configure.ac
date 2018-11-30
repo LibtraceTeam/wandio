@@ -3,11 +3,11 @@
 # Now you only need to update the version number in two places - below,
 # and in the README
 
-AC_INIT([wandio],[4.0.0],[contact@wand.net.nz],[wandio])
+AC_INIT([wandio],[4.0.1],[contact@wand.net.nz],[wandio])
 
 WANDIO_MAJOR=4
 WANDIO_MID=0
-WANDIO_MINOR=0
+WANDIO_MINOR=1
 
 # OpenSolaris hides libraries like libncurses in /usr/gnu/lib, which is not
 # searched by default - add it to LDFLAGS so we at least have a chance of
@@ -232,6 +232,27 @@ AS_IF([test "x$have_zstd" = "xyes"], [
 	with_zstd=no]
 )
 
+AC_ARG_WITH([lz4],
+        AC_HELP_STRING([--with-lz4], [build with support for lz4 compressed files]))
+
+AS_IF([test "x$with_lz4" != "xno"],
+        [
+        AC_CHECK_LIB(lz4, LZ4F_createDecompressionContext, have_lz4=yes, have_lz4=no)
+        ], [have_zstd=no])
+
+AS_IF([test "x$have_lz4" = "xyes"], [
+        if test "$ac_cv_lib_lz4_code" != "none required"; then
+                LIBWANDIO_LIBS="$LIBWANDIO_LIBS -llz4"
+        fi
+        AC_DEFINE(HAVE_LIBLZ4, 1, "Compiled with lz4 support")
+        with_lz4=yes],
+
+
+        [AS_IF([test "x$with_lz4" = "xyes"],
+                [AC_MSG_ERROR([lz4 requested but not found])])
+        AC_DEFINE(HAVE_LIBLZ4, 0, "Compiled with lz4 support")
+        with_lz4=no]
+)
 
 AC_ARG_WITH([http],
         AC_HELP_STRING([--with-http], [build with support for reading files over http (using libcurl)]))
@@ -262,6 +283,8 @@ AM_CONDITIONAL([HAVE_ZLIB], [test "x$with_zlib" != "xno"])
 AM_CONDITIONAL([HAVE_LZO], [ test "x$with_lzo" != "xno"])
 AM_CONDITIONAL([HAVE_LZMA], [ test "x$with_lzma" != "xno"])
 AM_CONDITIONAL([HAVE_ZSTD], [ test "x$with_zstd" != "xno"])
+AM_CONDITIONAL([HAVE_LZ4], [ test "x$with_lz4" != "xno"])
+AM_CONDITIONAL([HAVE_ZSTD_OR_LZ4], [ test "x$with_zstd" != "xno" -o "x$with_lz4" != "xno"])
 AM_CONDITIONAL([HAVE_HTTP], [ test "x$with_http" != "xno"])
 
 # Set all our output variables
@@ -299,4 +322,5 @@ reportopt "Compiled with compressed file (bz2) support" $with_bzip2
 reportopt "Compiled with compressed file (lzo write only) support" $with_lzo
 reportopt "Compiled with compressed file (lzma) support" $with_lzma
 reportopt "Compiled with compressed file (zstd) support" $with_zstd
+reportopt "Compiled with compressed file (lz4) support" $with_lz4
 reportopt "Compiled with http read (libcurl) support" $with_http

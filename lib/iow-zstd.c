@@ -4,7 +4,7 @@
  * Copyright (c) 2007-2015 The University of Waikato, Hamilton,
  * New Zealand.
  *
- * Authors: Robert Zeh
+ * Authors: Robert Zeh, Sergey Cherepanov
  *
  * All rights reserved.
  *
@@ -45,7 +45,7 @@ struct zstdw_t {
     ZSTD_CStream *stream;
     ZSTD_outBuffer output_buffer;
     ZSTD_inBuffer input_buffer;
-    char outbuff[1024];
+    char outbuff[1024*1024];
 };
 
 #define DATA(iow) ((struct zstdw_t *)((iow)->data))
