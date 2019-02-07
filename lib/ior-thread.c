@@ -52,13 +52,11 @@
  */
 
 /* 1MB Buffer */
-#define BUFFERSIZE (1024*1024)
-
 extern io_source_t thread_source;
 
 /* This structure defines a single buffer or "slice" */
 struct buffer_t {
-	char buffer[BUFFERSIZE];	/* The buffer itself */
+	char buffer[WANDIO_BUFFER_SIZE];	/* The buffer itself */
 	int len;			/* The size of the buffer */
 	enum { EMPTY = 0, FULL = 1 } state;	/* Is the buffer in use? */
 };

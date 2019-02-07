@@ -58,6 +58,8 @@
 extern "C" {
 #endif
 
+#define WANDIO_BUFFER_SIZE (1024 * 1024)
+
 typedef struct io_t io_t; /**< Opaque IO handle structure for reading */
 typedef struct iow_t iow_t; /**< Opaque IO handle structure for writing */
 

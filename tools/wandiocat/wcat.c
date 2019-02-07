@@ -55,6 +55,7 @@ int main(int argc, char *argv[])
         int compress_type = WANDIO_COMPRESS_NONE;
         char *output = "-";
         char c;
+        char *buffer = NULL;
         while ((c = getopt (argc, argv, "Z:z:o:h")) != -1) {
                 switch (c)
                 {
@@ -95,8 +96,10 @@ int main(int argc, char *argv[])
         iow_t *iow = wandio_wcreate(output, compress_type, compress_level, 0);
         /* stdout */
         int i;
+
+        buffer = malloc(WANDIO_BUFFER_SIZE);
+
         for(i=optind; i<argc; ++i) {
-                char buffer[1024*1024];
                 io_t *ior = wandio_create(argv[i]);
                 if (!ior) {
                         fprintf(stderr, "Failed to open %s\n", argv[i]);
@@ -112,6 +115,7 @@ int main(int argc, char *argv[])
 
                 wandio_destroy(ior);
         }
+        free(buffer);
         wandio_wdestroy(iow);
         return 0;
 }

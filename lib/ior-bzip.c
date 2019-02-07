@@ -45,7 +45,7 @@ enum err_t {
 
 struct bz_t {
 	bz_stream strm;
-	char inbuff[1024*1024];
+	char inbuff[WANDIO_BUFFER_SIZE];
 	int outoffset;
 	io_t *parent;
 	enum err_t err;

@@ -48,7 +48,7 @@ struct zstd_t {
     enum err_t err;
     io_t *parent;
     int inbuff_index;
-    char inbuff[1024*1024];
+    char inbuff[WANDIO_BUFFER_SIZE];
 };
 
 #define DATA(io) ((struct zstd_t *)((io)->data))

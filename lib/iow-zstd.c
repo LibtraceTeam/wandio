@@ -45,7 +45,7 @@ struct zstdw_t {
     ZSTD_CStream *stream;
     ZSTD_outBuffer output_buffer;
     ZSTD_inBuffer input_buffer;
-    char outbuff[1024];
+    char outbuff[WANDIO_BUFFER_SIZE];
 };
 
 #define DATA(iow) ((struct zstdw_t *)((iow)->data))

@@ -47,7 +47,7 @@ struct qatw_t {
         QzSession_T sess;
         iow_t *child;
         QzStream_T strm;
-        unsigned char outbuff[1024 * 1024];
+        unsigned char outbuff[WANDIO_BUFFER_SIZE];
         int64_t outused;
         enum err_t err;
 };
