@@ -232,6 +232,28 @@ AS_IF([test "x$have_zstd" = "xyes"], [
 	with_zstd=no]
 )
 
+AC_ARG_WITH([qatzip],
+	AC_HELP_STRING([--with-qatzip], [build with support for Intel QuickAssist compression]))
+
+AS_IF([test "x$with_qatzip" != "xno"],
+	[
+	AC_CHECK_LIB(qatzip, qzCompress, have_qatzip=yes, have_qatzip=no)
+	], [have_qatzip=no])
+
+AS_IF([test "x$have_qatzip" = "xyes"], [
+	if test "$ac_cv_lib_qatzip_qzCompress" != "none required"; then
+		LIBWANDIO_LIBS="$LIBWANDIO_LIBS -lqatzip"
+	fi
+	AC_DEFINE(HAVE_LIBQATZIP, 1, "Compiled with QATzip support")
+	with_qatzip=yes],
+
+
+	[AS_IF([test "x$with_qatzip" = "xyes"],
+		[AC_MSG_ERROR([QATzip requested but not found])])
+	AC_DEFINE(HAVE_LIBQATZIP, 0, "Compiled with QATzip support")
+	with_qatzip=no]
+)
+
 
 AC_ARG_WITH([http],
         AC_HELP_STRING([--with-http], [build with support for reading files over http (using libcurl)]))
@@ -262,6 +284,7 @@ AM_CONDITIONAL([HAVE_ZLIB], [test "x$with_zlib" != "xno"])
 AM_CONDITIONAL([HAVE_LZO], [ test "x$with_lzo" != "xno"])
 AM_CONDITIONAL([HAVE_LZMA], [ test "x$with_lzma" != "xno"])
 AM_CONDITIONAL([HAVE_ZSTD], [ test "x$with_zstd" != "xno"])
+AM_CONDITIONAL([HAVE_QATZIP], [ test "x$with_qatzip" != "xno"])
 AM_CONDITIONAL([HAVE_HTTP], [ test "x$with_http" != "xno"])
 
 # Set all our output variables
@@ -299,4 +322,5 @@ reportopt "Compiled with compressed file (bz2) support" $with_bzip2
 reportopt "Compiled with compressed file (lzo write only) support" $with_lzo
 reportopt "Compiled with compressed file (lzma) support" $with_lzma
 reportopt "Compiled with compressed file (zstd) support" $with_zstd
+reportopt "Compiled with Intel QuickAssist Technology support" $with_qatzip
 reportopt "Compiled with http read (libcurl) support" $with_http
