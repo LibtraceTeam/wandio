@@ -202,6 +202,7 @@ io_t *thread_open(io_t *parent);
 io_t *lzma_open(io_t *parent);
 io_t *zstd_open(io_t *parent);
 io_t *peek_open(io_t *parent);
+io_t *qat_open(io_t *parent);
 io_t *stdio_open(const char *filename);
 io_t *http_open(const char *filename);
 
@@ -210,6 +211,7 @@ iow_t *bz_wopen(iow_t *child, int compress_level);
 iow_t *lzo_wopen(iow_t *child, int compress_level);
 iow_t *lzma_wopen(iow_t *child, int compress_level);
 iow_t *zstd_wopen(iow_t *child, int compress_level);
+iow_t *qat_wopen(iow_t *child, int compress_level);
 iow_t *thread_wopen(iow_t *child);
 iow_t *stdio_wopen(const char *filename, int fileflags);
 

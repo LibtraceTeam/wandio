@@ -41,10 +41,17 @@ else
 LIBTRACE_HTTP=
 endif
 
+if HAVE_QATZIP
+LIBTRACEIO_QATZIP=ior-qat.c iow-qat.c
+else
+LIBTRACEIO_QATZIP=
+endif
+
 libwandio_la_SOURCES=wandio.c ior-peek.c ior-stdio.c ior-thread.c \
 		iow-stdio.c iow-thread.c wandio.h wandio_internal.h \
 		$(LIBTRACEIO_ZLIB) $(LIBTRACEIO_BZLIB) $(LIBTRACEIO_LZO) \
-                $(LIBTRACEIO_LZMA) $(LIBTRACEIO_HTTP) $(LIBTRACEIO_ZSTD)
+                $(LIBTRACEIO_LZMA) $(LIBTRACEIO_HTTP) $(LIBTRACEIO_ZSTD) \
+                $(LIBTRACEIO_QATZIP)
 
 AM_CPPFLAGS = @ADD_INCLS@
 libwandio_la_LIBADD = @LIBWANDIO_LIBS@
