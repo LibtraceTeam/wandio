@@ -87,19 +87,20 @@ static int safe_open(const char *filename, int flags)
 	 * original user rather than root.
 	 *
 	 * TODO: make this some sort of config option */
+	if (getuid() == 0) {
+		sudoenv = getenv("SUDO_UID");
+		if (sudoenv != NULL) {
+			userid = strtol(sudoenv, NULL, 10);
+		}
+		sudoenv = getenv("SUDO_GID");
+		if (sudoenv != NULL) {
+			groupid = strtol(sudoenv, NULL, 10);
+		}
 
-	sudoenv = getenv("SUDO_UID");
-	if (sudoenv != NULL) {
-		userid = strtol(sudoenv, NULL, 10);
-	}
-	sudoenv = getenv("SUDO_GID");
-	if (sudoenv != NULL) {
-		groupid = strtol(sudoenv, NULL, 10);
-	}
-	
-	if (userid != 0 && fchown(fd, userid, groupid) == -1) {
-		perror("fchown");
-		return -1;
+		if (userid != 0 && fchown(fd, userid, groupid) == -1) {
+			perror("fchown");
+			return -1;
+		}
 	}
 
 	return fd;
