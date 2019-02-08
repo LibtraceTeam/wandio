@@ -46,8 +46,7 @@ enum err_t {
 struct qatw_t {
         QzSession_T sess;
         iow_t *child;
-        QzStream_T strm;
-        unsigned char outbuff[WANDIO_BUFFER_SIZE];
+        unsigned char outbuff[WANDIO_BUFFER_SIZE * 10];
         int64_t outused;
         enum err_t err;
 };
@@ -102,13 +101,6 @@ iow_t *qat_wopen(iow_t *child, int compress_level) {
         iow->data = (struct qatw_t *)calloc(1, sizeof(struct qatw_t));
         DATA(iow)->outused = 0;
         DATA(iow)->child = child;
-
-        DATA(iow)->strm.in_sz = 0;
-        DATA(iow)->strm.out_sz = sizeof(DATA(iow)->outbuff);
-        DATA(iow)->strm.in = NULL;
-        DATA(iow)->strm.out = DATA(iow)->outbuff;
-        DATA(iow)->strm.pending_in = 0;
-        DATA(iow)->strm.pending_out = 0;
         DATA(iow)->err = ERR_OK;
 
         if ((x = qzInit(&(DATA(iow)->sess), 0)) < 0) {
@@ -144,83 +136,80 @@ iow_t *qat_wopen(iow_t *child, int compress_level) {
 	return iow;
 }
 
-static int64_t qat_wwrite(iow_t *iow, const char *buffer, int64_t len) {
+static inline int64_t _qat_wwrite(iow_t *iow, const char *buffer, int64_t len,
+                unsigned int last) {
 
         int64_t consumed = 0;
+        int64_t spaceleft;
+        unsigned int dst_len, src_len;
+        unsigned char dummy[128];
+        int rc;
 
         while (DATA(iow)->err == ERR_OK && consumed < len) {
 
-                while (DATA(iow)->outused >=
-                                (int64_t)sizeof(DATA(iow)->outbuff)) {
+                spaceleft = sizeof(DATA(iow)->outbuff) - DATA(iow)->outused;
+                src_len = (unsigned int)len;
+
+                if (spaceleft < qzMaxCompressedLength(src_len)) {
                         int written = wandio_wwrite(DATA(iow)->child,
                                         DATA(iow)->outbuff,
-                                        sizeof(DATA(iow)->outbuff));
+                                        DATA(iow)->outused);
                         if (written <= 0) {
                                 DATA(iow)->err = ERR_ERROR;
                                 return -1;
                         }
-                        DATA(iow)->strm.out = DATA(iow)->outbuff;
-                        DATA(iow)->strm.out_sz = sizeof(DATA(iow)->outbuff);
                         DATA(iow)->outused = 0;
+                        spaceleft = sizeof(DATA(iow)->outbuff);
                 }
 
-                DATA(iow)->strm.in = ((unsigned char *)buffer) + consumed;
-                DATA(iow)->strm.in_sz = len - consumed;
-                DATA(iow)->strm.out = DATA(iow)->outbuff + DATA(iow)->outused;
-                DATA(iow)->strm.out_sz = sizeof(DATA(iow)->outbuff) -
-                                DATA(iow)->outused;
-
-                int rc = qzCompressStream(&(DATA(iow)->sess),
-                        &(DATA(iow)->strm), 0);
+                dst_len = (unsigned int)spaceleft;
+                rc = qzCompress(&(DATA(iow)->sess),
+                                buffer != NULL ? (unsigned char *)buffer
+                                        : dummy, &src_len,
+                                DATA(iow)->outbuff + DATA(iow)->outused,
+                                &dst_len, last);
 
                 if (rc < 0) {
                         DATA(iow)->err = ERR_ERROR;
+                        qat_perror(rc);
+                        return -1;
                 } else {
                         DATA(iow)->err = ERR_OK;
                 }
 
-                consumed += DATA(iow)->strm.in_sz;
-                DATA(iow)->outused += DATA(iow)->strm.out_sz;
+                consumed += src_len;
+                DATA(iow)->outused += dst_len;
         }
 
-	return len - consumed;
+        return len - consumed;
+}
+
+static int64_t qat_wwrite(iow_t *iow, const char *buffer, int64_t len) {
+        return _qat_wwrite(iow, buffer, len, 0);
 }
 
 static int qat_wflush(iow_t *iow) {
 
         int rc;
 
-        do {
-                DATA(iow)->strm.in_sz = 0;
-                DATA(iow)->strm.out = DATA(iow)->outbuff + DATA(iow)->outused;
-                DATA(iow)->strm.out_sz = sizeof(DATA(iow)->outbuff) -
-                                DATA(iow)->outused;
+        rc = _qat_wwrite(iow, NULL, 0, 1);
+        if (DATA(iow)->err == ERR_ERROR) {
+                return -1;
+        }
 
-                rc = qzCompressStream(&(DATA(iow)->sess),
-                                &(DATA(iow)->strm), 1);
-                if (rc < 0) {
-                        qat_perror(rc);
-                        DATA(iow)->err = ERR_ERROR;
-                        return -1;
-                }
-                DATA(iow)->outused += DATA(iow)->strm.out_sz;
+        rc = wandio_wwrite(DATA(iow)->child, DATA(iow)->outbuff,
+                        DATA(iow)->outused);
+        if (rc < 0) {
+                DATA(iow)->err = ERR_ERROR;
+                return rc;
+        }
 
-                rc = wandio_wwrite(DATA(iow)->child, DATA(iow)->outbuff,
-                                DATA(iow)->outused);
-                if (rc < 0) {
-                        DATA(iow)->err = ERR_ERROR;
-                        return rc;
-                }
+        if ((rc = wandio_wflush(DATA(iow)->child)) < 0) {
+                DATA(iow)->err = ERR_ERROR;
+                return rc;
+        }
 
-                if ((rc = wandio_wflush(DATA(iow)->child)) < 0) {
-                        DATA(iow)->err = ERR_ERROR;
-                        return rc;
-                }
-
-                DATA(iow)->strm.out = DATA(iow)->outbuff;
-                DATA(iow)->strm.out_sz = sizeof(DATA(iow)->outbuff);
-                DATA(iow)->outused = 0;
-        } while (DATA(iow)->strm.pending_out != 0);
+        DATA(iow)->outused = 0;
 
         return ERR_OK;
 }
@@ -230,7 +219,6 @@ static void qat_wclose(iow_t *iow) {
         int rc;
 
         rc = qat_wflush(iow);
-        rc = qzEndStream(&(DATA(iow)->sess), &(DATA(iow)->strm));
         rc = qzTeardownSession(&(DATA(iow)->sess));
         rc = qzClose(&(DATA(iow)->sess));
 
