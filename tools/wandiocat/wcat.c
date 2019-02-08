@@ -30,6 +30,7 @@
 #include <getopt.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 static void printhelp() {
         printf("wandiocat: concatenate files into a single compressed file\n");
@@ -97,7 +98,14 @@ int main(int argc, char *argv[])
         /* stdout */
         int i;
 
+#if _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
+        if (posix_memalign((void **)&buffer, 4096, WANDIO_BUFFER_SIZE) != 0) {
+                fprintf(stderr, "Unable to allocate aligned buffer for wandiocat: %s\n", strerror(errno));
+                abort();
+        }
+#else
         buffer = malloc(WANDIO_BUFFER_SIZE);
+#endif
 
         for(i=optind; i<argc; ++i) {
                 io_t *ior = wandio_create(argv[i]);
