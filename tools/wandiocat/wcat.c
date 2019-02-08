@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
 
                 int64_t len;
                 do {
-                        len = wandio_read(ior, buffer, sizeof(buffer));
+                        len = wandio_read(ior, buffer, WANDIO_BUFFER_SIZE);
                         if (len > 0)
                                 wandio_wwrite(iow, buffer, len);
                 } while(len > 0);
