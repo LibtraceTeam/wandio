@@ -131,8 +131,6 @@ iow_t *qat_wopen(iow_t *child, int compress_level) {
                 return NULL;
         }
 
-        fprintf(stderr, "Using QAT for compression...\n");
-
 	return iow;
 }
 
