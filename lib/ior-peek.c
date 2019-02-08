@@ -50,7 +50,7 @@
 /* for O_DIRECT we have to read in multiples of this */
 #define MIN_READ_SIZE 4096
 /* Round reads for peeks into the buffer up to this size */
-#define PEEK_SIZE (1024*1024)
+#define PEEK_SIZE (WANDIO_BUFFER_SIZE)
 
 struct peek_t {
 	io_t *child;
