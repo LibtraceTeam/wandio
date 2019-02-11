@@ -42,7 +42,7 @@ static void printhelp() {
         printf("    Default is 0.\n");
         printf(" -Z <method>\n");
         printf("    Set the compression method. Must be one of 'gzip', \n");
-        printf("    'bzip2', 'lzo', 'lzma', or 'zstd'. If not specified, no\n");
+        printf("    'bzip2', 'lzo', 'lzma', 'zstd' or 'lz4'. If not specified, no\n");
         printf("    compression is performed.\n");
         printf(" -o <file>\n");
         printf("    The name of the output file. If not specified, output\n");
@@ -70,6 +70,7 @@ int main(int argc, char *argv[])
 			    return -1;
 			}
 			compress_type = compression_type->compress_type;
+
 		    }
                         break;
                 case 'z':
