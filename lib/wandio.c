@@ -40,12 +40,13 @@
  */
 
 struct wandio_compression_type compression_type[]  = {
-	{ "gzip",	"gz",	WANDIO_COMPRESS_ZLIB 	},
-	{ "bzip2",      "bz2",	WANDIO_COMPRESS_BZ2	},
-	{ "lzo",	"lzo",  WANDIO_COMPRESS_LZO	},
-	{ "lzma",	"xz",	WANDIO_COMPRESS_LZMA	},
-	{ "zstd",       "zst",	WANDIO_COMPRESS_ZSTD    },
-	{ "NONE",	"",	WANDIO_COMPRESS_NONE	}
+	{ "gzip",		"gz",		WANDIO_COMPRESS_ZLIB 	},
+	{ "bzip2", 	"bz2",	WANDIO_COMPRESS_BZ2		},
+	{ "lzo",		"lzo",  WANDIO_COMPRESS_LZO		},
+	{ "lzma",		"xz",		WANDIO_COMPRESS_LZMA	},
+	{ "zstd",   "zst",	WANDIO_COMPRESS_ZSTD	},
+	{ "lz4",    "lz4",	WANDIO_COMPRESS_LZ4	},
+	{ "NONE",		"",			WANDIO_COMPRESS_NONE	}
 };
 
 int keep_stats = 0;
@@ -218,12 +219,37 @@ static io_t *create_io_reader(const char *filename, int autodetect)
 			(buffer[2] == 0x2f) && (buffer[3] == 0xfd)) {
 #if HAVE_LIBZSTD
 			DEBUG_PIPELINE("zstd");
-			io = zstd_open(io);
+			io = zstd_lz4_open(io);
 #else
 			fprintf(stderr, "File %s is zstd compress but libwandio has not been built with zstd support!\n", filename);
 			return NULL;
 #endif
 		}
+
+		if ((len >= 6) &&
+				(buffer[0] == 0x04) && (buffer[1] == 0x22) &&
+				(buffer[2] == 0x4d) && (buffer[3] == 0x18)) {
+#if HAVE_LIBLZ4
+			DEBUG_PIPELINE("lz4");
+			io = zstd_lz4_open(io);
+#else
+			fprintf(stderr, "File %s is lz4 compress but libwandio has not been built with lz4 support!\n", filename);
+			return NULL;
+#endif
+		}
+// Both ZSTD and LZ4 can have skippable frames, and file can start with them
+		if ((len >= 6) &&
+				((buffer[0] & 0xf0) == 0x50) && (buffer[1] == 0x2a) &&
+				(buffer[2] == 0x4d) && (buffer[3] == 0x18)) {
+#if HAVE_LIBLZ4 || HAVE_LIBZSTD
+			DEBUG_PIPELINE("lz4 or zstd");
+			io = zstd_lz4_open(io);
+#else
+			fprintf(stderr, "File %s is lz4 or zstd compress but libwandio has not been built with lz4 or zstd support!\n", filename);
+			return NULL;
+#endif
+		}
+
 	}
 	/* Now open a threaded, peekable reader using the appropriate module
 	 * to read the data */
@@ -315,55 +341,68 @@ DLLEXPORT void wandio_destroy(io_t *io)
 	io->source->close(io); 
 }
 
-DLLEXPORT iow_t *wandio_wcreate(const char *filename, int compress_type, int compression_level, int flags)
-{
-	iow_t *iow;
+DLLEXPORT iow_t *wandio_wcreate(const char *filename, int compress_type,
+        int compression_level, int flags) {
+	iow_t *iow, *base;
 	parse_env();
 
-	assert ( compression_level >= 0 && compression_level <= 9 );
+	assert (compression_level >= 0 && compression_level <= 9);
 	assert (compress_type != WANDIO_COMPRESS_MASK);
 
-	iow=stdio_wopen(filename, flags);
-	if (!iow)
+	base=stdio_wopen(filename, flags);
+	if (!base)
 		return NULL;
+        iow = base;
 
-	/* We prefer zlib if available, otherwise we'll use bzip. If neither
-	 * are present, guess we'll just have to write uncompressed */
 #if HAVE_LIBZ
 	if (compression_level != 0 &&
 	    compress_type == WANDIO_COMPRESS_ZLIB) {
-		iow = zlib_wopen(iow,compression_level);
+
+#if HAVE_LIBQATZIP
+                /* Try using libqat. If this fails, fall back to
+                 * standard zlib */
+                iow = qat_wopen(base, compression_level);
+#endif
+                if (iow == NULL || iow == base) {
+        		iow = zlib_wopen(base,compression_level);
+                }
 	}
 #endif
 #if HAVE_LIBLZO2
 	else if (compression_level != 0 &&
 	    compress_type == WANDIO_COMPRESS_LZO) {
-		iow = lzo_wopen(iow,compression_level);
+		iow = lzo_wopen(base,compression_level);
 	}
 #endif
 #if HAVE_LIBBZ2
 	else if (compression_level != 0 &&
 	    compress_type == WANDIO_COMPRESS_BZ2) {
-		iow = bz_wopen(iow,compression_level);
+		iow = bz_wopen(base,compression_level);
 	}
 #endif
 #if HAVE_LIBLZMA
 	else if (compression_level != 0 &&
 	    compress_type == WANDIO_COMPRESS_LZMA) {
-		iow = lzma_wopen(iow,compression_level);
+		iow = lzma_wopen(base,compression_level);
 	}
 #endif
 #if HAVE_LIBZSTD
 	else if (compression_level != 0 &&
 	    compress_type == WANDIO_COMPRESS_ZSTD) {
-		iow = zstd_wopen(iow,compression_level);
+		iow = zstd_wopen(base,compression_level);
+        }
+#endif
+#if HAVE_LIBLZ4
+	else if (compress_type == WANDIO_COMPRESS_LZ4) {
+		iow = lz4_wopen(base, compression_level);
 	}
 #endif
 	/* Open a threaded writer */
-	if (use_threads)
+	if (use_threads) {
 		return thread_wopen(iow);
-	else
+	} else {
 		return iow;
+	}
 }
 
 DLLEXPORT int64_t wandio_wwrite(iow_t *iow, const void *buffer, int64_t len)

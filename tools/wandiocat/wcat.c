@@ -30,6 +30,7 @@
 #include <getopt.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 static void printhelp() {
         printf("wandiocat: concatenate files into a single compressed file\n");
@@ -41,7 +42,7 @@ static void printhelp() {
         printf("    Default is 0.\n");
         printf(" -Z <method>\n");
         printf("    Set the compression method. Must be one of 'gzip', \n");
-        printf("    'bzip2', 'lzo', 'lzma', or 'zstd'. If not specified, no\n");
+        printf("    'bzip2', 'lzo', 'lzma', 'zstd' or 'lz4'. If not specified, no\n");
         printf("    compression is performed.\n");
         printf(" -o <file>\n");
         printf("    The name of the output file. If not specified, output\n");
@@ -55,6 +56,7 @@ int main(int argc, char *argv[])
         int compress_type = WANDIO_COMPRESS_NONE;
         char *output = "-";
         char c;
+        char *buffer = NULL;
         while ((c = getopt (argc, argv, "Z:z:o:h")) != -1) {
                 switch (c)
                 {
@@ -68,6 +70,7 @@ int main(int argc, char *argv[])
 			    return -1;
 			}
 			compress_type = compression_type->compress_type;
+
 		    }
                         break;
                 case 'z':
@@ -95,8 +98,17 @@ int main(int argc, char *argv[])
         iow_t *iow = wandio_wcreate(output, compress_type, compress_level, 0);
         /* stdout */
         int i;
+
+#if _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
+        if (posix_memalign((void **)&buffer, 4096, WANDIO_BUFFER_SIZE) != 0) {
+                fprintf(stderr, "Unable to allocate aligned buffer for wandiocat: %s\n", strerror(errno));
+                abort();
+        }
+#else
+        buffer = malloc(WANDIO_BUFFER_SIZE);
+#endif
+
         for(i=optind; i<argc; ++i) {
-                char buffer[1024*1024];
                 io_t *ior = wandio_create(argv[i]);
                 if (!ior) {
                         fprintf(stderr, "Failed to open %s\n", argv[i]);
@@ -105,13 +117,14 @@ int main(int argc, char *argv[])
 
                 int64_t len;
                 do {
-                        len = wandio_read(ior, buffer, sizeof(buffer));
+                        len = wandio_read(ior, buffer, WANDIO_BUFFER_SIZE);
                         if (len > 0)
                                 wandio_wwrite(iow, buffer, len);
                 } while(len > 0);
 
                 wandio_destroy(ior);
         }
+        free(buffer);
         wandio_wdestroy(iow);
         return 0;
 }

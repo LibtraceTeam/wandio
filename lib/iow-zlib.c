@@ -45,7 +45,7 @@ enum err_t {
 
 struct zlibw_t {
 	z_stream strm;
-	Bytef outbuff[1024*1024];
+	Bytef outbuff[WANDIO_BUFFER_SIZE];
 	iow_t *child;
 	enum err_t err;
 	int inoffset;

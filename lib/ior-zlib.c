@@ -44,7 +44,8 @@ enum err_t {
 };
 
 struct zlib_t {
-	Bytef inbuff[1024*1024]; /* bytef is what zlib uses for buffer pointers */
+        /* bytef is what zlib uses for buffer pointers */
+	Bytef inbuff[WANDIO_BUFFER_SIZE];
 	z_stream strm;
 	io_t *parent;
 	int outoffset;

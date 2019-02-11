@@ -58,6 +58,8 @@
 extern "C" {
 #endif
 
+#define WANDIO_BUFFER_SIZE (1024 * 1024)
+
 typedef struct io_t io_t; /**< Opaque IO handle structure for reading */
 typedef struct iow_t iow_t; /**< Opaque IO handle structure for writing */
 
@@ -180,10 +182,12 @@ enum {
 	WANDIO_COMPRESS_BZ2	= 2,
 	/** LZO compression */
 	WANDIO_COMPRESS_LZO	= 3,
-        /** LZMA compression */
-        WANDIO_COMPRESS_LZMA    = 4,
+	/** LZMA compression */
+	WANDIO_COMPRESS_LZMA    = 4,
 	/** ZSTD compression */
 	WANDIO_COMPRESS_ZSTD	= 5,
+	/** LZ4 compression */
+  WANDIO_COMPRESS_LZ4	= 6,
 	/** All supported methods - used as a bitmask */
 	WANDIO_COMPRESS_MASK	= 7
 };
@@ -200,8 +204,9 @@ io_t *bz_open(io_t *parent);
 io_t *zlib_open(io_t *parent);
 io_t *thread_open(io_t *parent);
 io_t *lzma_open(io_t *parent);
-io_t *zstd_open(io_t *parent);
+io_t *zstd_lz4_open(io_t *parent);
 io_t *peek_open(io_t *parent);
+io_t *qat_open(io_t *parent);
 io_t *stdio_open(const char *filename);
 io_t *http_open(const char *filename);
 
@@ -210,6 +215,8 @@ iow_t *bz_wopen(iow_t *child, int compress_level);
 iow_t *lzo_wopen(iow_t *child, int compress_level);
 iow_t *lzma_wopen(iow_t *child, int compress_level);
 iow_t *zstd_wopen(iow_t *child, int compress_level);
+iow_t *qat_wopen(iow_t *child, int compress_level);
+iow_t *lz4_wopen(iow_t *child, int compress_level);
 iow_t *thread_wopen(iow_t *child);
 iow_t *stdio_wopen(const char *filename, int fileflags);
 

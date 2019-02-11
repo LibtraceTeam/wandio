@@ -510,8 +510,9 @@ static void shutdown_thread(iow_t *iow, struct lzothread_t *thread)
 }
 
 static int lzo_wflush(iow_t *iow) {
-        /* TODO implement this */
-        return 0;
+  /* TODO implement this */
+	(void)(iow);
+  return 0;
 }
 
 static void lzo_wclose(iow_t *iow)

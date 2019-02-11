@@ -43,7 +43,7 @@ enum err_t {
 };
 
 struct lzma_t {
-	uint8_t inbuff[1024*1024];
+	uint8_t inbuff[WANDIO_BUFFER_SIZE];
 	lzma_stream strm;
 	io_t *parent;
 	int outoffset;

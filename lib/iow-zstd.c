@@ -4,7 +4,7 @@
  * Copyright (c) 2007-2015 The University of Waikato, Hamilton,
  * New Zealand.
  *
- * Authors: Robert Zeh
+ * Authors: Robert Zeh, Sergey Cherepanov
  *
  * All rights reserved.
  *
@@ -45,7 +45,7 @@ struct zstdw_t {
     ZSTD_CStream *stream;
     ZSTD_outBuffer output_buffer;
     ZSTD_inBuffer input_buffer;
-    char outbuff[1024];
+    char outbuff[WANDIO_BUFFER_SIZE];
 };
 
 #define DATA(iow) ((struct zstdw_t *)((iow)->data))
@@ -117,6 +117,7 @@ static void zstd_wclose(iow_t *iow)
     /* I'm not sure if this loop is exactly the right thing to do,
        but it is what happens in zstd's zstd/programs/fileio.c. */
     while (result != 0) {
+	DATA(iow)->output_buffer.pos = 0;
 	result = ZSTD_endStream(DATA(iow)->stream, &DATA(iow)->output_buffer);
 
 	if (ZSTD_isError(result)) {
@@ -126,7 +127,6 @@ static void zstd_wclose(iow_t *iow)
 	wandio_wwrite(DATA(iow)->child,
 		      DATA(iow)->outbuff,
 		      DATA(iow)->output_buffer.pos);
-	DATA(iow)->output_buffer.pos = 0;
     }
     wandio_wdestroy(DATA(iow)->child);
     ZSTD_freeCStream(DATA(iow)->stream);
