@@ -26,6 +26,7 @@
 
 #include "config.h"
 #include <assert.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -113,7 +114,8 @@ static int64_t refill_buffer(io_t *io, int64_t len) {
                 res = posix_memalign(&buf_ptr, 4096, DATA(io)->length);
                 if (res != 0) {
                         fprintf(stderr, "Error aligning IO buffer: %d\n", res);
-                        return res;
+                        errno = res;
+                        return -1;
                 }
                 DATA(io)->buffer = buf_ptr;
 #else
