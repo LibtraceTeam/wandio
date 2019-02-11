@@ -187,7 +187,7 @@ enum {
 	/** ZSTD compression */
 	WANDIO_COMPRESS_ZSTD	= 5,
 	/** LZ4 compression */
-  WANDIO_COMPRESS_LZ4	= 6,
+        WANDIO_COMPRESS_LZ4	= 6,
 	/** All supported methods - used as a bitmask */
 	WANDIO_COMPRESS_MASK	= 7
 };
@@ -336,6 +336,13 @@ iow_t *wandio_wcreate(const char *filename, int compression_type, int compressio
  */
 int64_t wandio_wwrite(iow_t *iow, const void *buffer, int64_t len);
 
+/** Flushes any compressed data that is being retained internally by the
+ *  libwandio IO writer to the output file.
+ *
+ * @param iow		The IO writer to write the data with
+ * @return The amount of data written as a result of the flush operation,
+ *         or -1 if an error occurs
+ */
 int wandio_wflush(iow_t *iow);
 
 /** Destroys a libwandio IO writer, closing the file and freeing the writer
