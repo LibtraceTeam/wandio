@@ -18,7 +18,7 @@ provides transparent compression/decompression for the following formats:
  - lzo (write-only)
  - lzma
  - zstd
- - lz4 (write-only)
+ - lz4
  - Intel QAT (write-only)
  - http (read-only)
 
