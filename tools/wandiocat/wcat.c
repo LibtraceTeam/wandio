@@ -24,13 +24,13 @@
  *
  */
 
-#include "wandio.h"
 #include <ctype.h>
 #include <err.h>
+#include <errno.h>
 #include <getopt.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
+#include "wandio.h"
 
 static void printhelp() {
         printf("wandiocat: concatenate files into a single compressed file\n");
@@ -38,41 +38,39 @@ static void printhelp() {
         printf("Available options:\n\n");
         printf(" -z <level>\n");
         printf("    Sets a compression level for the output file, must be \n");
-        printf("    between 0 (uncompressed) and 9 (max compression)\n"); 
+        printf("    between 0 (uncompressed) and 9 (max compression)\n");
         printf("    Default is 0.\n");
         printf(" -Z <method>\n");
         printf("    Set the compression method. Must be one of 'gzip', \n");
-        printf("    'bzip2', 'lzo', 'lzma', 'zstd' or 'lz4'. If not specified, no\n");
+        printf("    'bzip2', 'lzo', 'lzma', 'zstd' or 'lz4'. If not specified, "
+               "no\n");
         printf("    compression is performed.\n");
         printf(" -o <file>\n");
         printf("    The name of the output file. If not specified, output\n");
         printf("    is written to standard output.\n");
 }
 
-
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
         int compress_level = 0;
         int compress_type = WANDIO_COMPRESS_NONE;
         char *output = "-";
         char c;
         char *buffer = NULL;
-        while ((c = getopt (argc, argv, "Z:z:o:h")) != -1) {
-                switch (c)
-                {
-                case 'Z':
-		    {
-		        struct wandio_compression_type* compression_type =
-			  wandio_lookup_compression_type(optarg);
-			if (compression_type == 0) {
-			    fprintf(stderr, "Unable to lookup compression type: '%s'\n",
-				    optarg);
-			    return -1;
-			}
-			compress_type = compression_type->compress_type;
+        while ((c = getopt(argc, argv, "Z:z:o:h")) != -1) {
+                switch (c) {
+                case 'Z': {
+                        struct wandio_compression_type *compression_type =
+                            wandio_lookup_compression_type(optarg);
+                        if (compression_type == 0) {
+                                fprintf(
+                                    stderr,
+                                    "Unable to lookup compression type: '%s'\n",
+                                    optarg);
+                                return -1;
+                        }
+                        compress_type = compression_type->compress_type;
 
-		    }
-                        break;
+                } break;
                 case 'z':
                         compress_level = atoi(optarg);
                         break;
@@ -84,14 +82,19 @@ int main(int argc, char *argv[])
                         return 0;
                 case '?':
                         if (optopt == 'Z' || optopt == 'z' || optopt == 'o')
-                                fprintf (stderr, "Option -%c requires an argument.\n", optopt);
-                        else if (isprint (optopt))
-                                fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+                                fprintf(stderr,
+                                        "Option -%c requires an argument.\n",
+                                        optopt);
+                        else if (isprint(optopt))
+                                fprintf(stderr, "Unknown option `-%c'.\n",
+                                        optopt);
                         else
-                                fprintf (stderr, "Unknown option character `\\x%x'.\n", optopt);
+                                fprintf(stderr,
+                                        "Unknown option character `\\x%x'.\n",
+                                        optopt);
                         return 1;
                 default:
-                        abort ();
+                        abort();
                 }
         }
 
@@ -101,14 +104,16 @@ int main(int argc, char *argv[])
 
 #if _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
         if (posix_memalign((void **)&buffer, 4096, WANDIO_BUFFER_SIZE) != 0) {
-                fprintf(stderr, "Unable to allocate aligned buffer for wandiocat: %s\n", strerror(errno));
+                fprintf(stderr,
+                        "Unable to allocate aligned buffer for wandiocat: %s\n",
+                        strerror(errno));
                 abort();
         }
 #else
         buffer = malloc(WANDIO_BUFFER_SIZE);
 #endif
 
-        for(i=optind; i<argc; ++i) {
+        for (i = optind; i < argc; ++i) {
                 io_t *ior = wandio_create(argv[i]);
                 if (!ior) {
                         fprintf(stderr, "Failed to open %s\n", argv[i]);
@@ -120,7 +125,7 @@ int main(int argc, char *argv[])
                         len = wandio_read(ior, buffer, WANDIO_BUFFER_SIZE);
                         if (len > 0)
                                 wandio_wwrite(iow, buffer, len);
-                } while(len > 0);
+                } while (len > 0);
 
                 wandio_destroy(ior);
         }

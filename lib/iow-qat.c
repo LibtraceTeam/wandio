@@ -24,24 +24,19 @@
  *
  */
 
-
 #include "config.h"
 #include "wandio.h"
 
+#include <assert.h>
 #include <qatzip.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
 #define DATA(iow) ((struct qatw_t *)((iow)->data))
 
 extern iow_source_t qat_wsource;
 
-enum err_t {
-        ERR_OK = 1,
-        ERR_EOF = 0,
-        ERR_ERROR = -1
-};
+enum err_t { ERR_OK = 1, ERR_EOF = 0, ERR_ERROR = -1 };
 
 struct qatw_t {
         QzSession_T sess;
@@ -56,31 +51,31 @@ static void qat_perror(int errcode) {
                 return;
         }
 
-        switch(errcode) {
-                case QZ_FAIL:
-                        fprintf(stderr, "QATzip failed for some unspecified reason.\n");
-                        break;
-                case QZ_PARAMS:
-                        fprintf(stderr, "Invalid parameters provided to QATzip.\n");
-                        break;
-                case QZ_BUF_ERROR:
-                        fprintf(stderr, "QATzip buffer was too small.\n");
-                        break;
-                case QZ_DATA_ERROR:
-                        fprintf(stderr, "QATzip input data was corrupted.\n");
-                        break;
-                case QZ_NOSW_NO_HW:
-                        fprintf(stderr, "QAT HW not detected.\n");
-                        break;
-                case QZ_NOSW_NO_MDRV:
-                        fprintf(stderr, "QAT memory driver not detected.\n");
-                        break;
-                case QZ_NOSW_NO_INST_ATTACH:
-                        fprintf(stderr, "Unable to attach to QAT instance.\n");
-                        break;
-                case QZ_NOSW_LOW_MEM:
-                        fprintf(stderr, "Insufficient pinned memory for QAT.\n");
-                        break;
+        switch (errcode) {
+        case QZ_FAIL:
+                fprintf(stderr, "QATzip failed for some unspecified reason.\n");
+                break;
+        case QZ_PARAMS:
+                fprintf(stderr, "Invalid parameters provided to QATzip.\n");
+                break;
+        case QZ_BUF_ERROR:
+                fprintf(stderr, "QATzip buffer was too small.\n");
+                break;
+        case QZ_DATA_ERROR:
+                fprintf(stderr, "QATzip input data was corrupted.\n");
+                break;
+        case QZ_NOSW_NO_HW:
+                fprintf(stderr, "QAT HW not detected.\n");
+                break;
+        case QZ_NOSW_NO_MDRV:
+                fprintf(stderr, "QAT memory driver not detected.\n");
+                break;
+        case QZ_NOSW_NO_INST_ATTACH:
+                fprintf(stderr, "Unable to attach to QAT instance.\n");
+                break;
+        case QZ_NOSW_LOW_MEM:
+                fprintf(stderr, "Insufficient pinned memory for QAT.\n");
+                break;
         }
 }
 
@@ -95,7 +90,6 @@ iow_t *qat_wopen(iow_t *child, int compress_level) {
         }
 
         iow = (iow_t *)malloc(sizeof(iow_t));
-
 
         iow->source = &(qat_wsource);
         iow->data = (struct qatw_t *)calloc(1, sizeof(struct qatw_t));
@@ -131,11 +125,11 @@ iow_t *qat_wopen(iow_t *child, int compress_level) {
                 return NULL;
         }
 
-	return iow;
+        return iow;
 }
 
 static inline int64_t _qat_wwrite(iow_t *iow, const char *buffer, int64_t len,
-                unsigned int last) {
+                                  unsigned int last) {
 
         int64_t consumed = 0;
         int64_t spaceleft;
@@ -149,9 +143,9 @@ static inline int64_t _qat_wwrite(iow_t *iow, const char *buffer, int64_t len,
                 src_len = (unsigned int)len;
 
                 if (spaceleft < qzMaxCompressedLength(src_len)) {
-                        int written = wandio_wwrite(DATA(iow)->child,
-                                        DATA(iow)->outbuff,
-                                        DATA(iow)->outused);
+                        int written =
+                            wandio_wwrite(DATA(iow)->child, DATA(iow)->outbuff,
+                                          DATA(iow)->outused);
                         if (written <= 0) {
                                 DATA(iow)->err = ERR_ERROR;
                                 return -1;
@@ -161,11 +155,10 @@ static inline int64_t _qat_wwrite(iow_t *iow, const char *buffer, int64_t len,
                 }
 
                 dst_len = (unsigned int)spaceleft;
-                rc = qzCompress(&(DATA(iow)->sess),
-                                buffer != NULL ? (unsigned char *)buffer
-                                        : dummy, &src_len,
-                                DATA(iow)->outbuff + DATA(iow)->outused,
-                                &dst_len, last);
+                rc = qzCompress(
+                    &(DATA(iow)->sess),
+                    buffer != NULL ? (unsigned char *)buffer : dummy, &src_len,
+                    DATA(iow)->outbuff + DATA(iow)->outused, &dst_len, last);
 
                 if (rc < 0) {
                         DATA(iow)->err = ERR_ERROR;
@@ -196,7 +189,7 @@ static int qat_wflush(iow_t *iow) {
         }
 
         rc = wandio_wwrite(DATA(iow)->child, DATA(iow)->outbuff,
-                        DATA(iow)->outused);
+                           DATA(iow)->outused);
         if (rc < 0) {
                 DATA(iow)->err = ERR_ERROR;
                 return rc;
@@ -225,9 +218,4 @@ static void qat_wclose(iow_t *iow) {
         free(iow);
 }
 
-iow_source_t qat_wsource = {
-	"qatw",
-	qat_wwrite,
-	qat_wflush,
-	qat_wclose
-};
+iow_source_t qat_wsource = {"qatw", qat_wwrite, qat_wflush, qat_wclose};

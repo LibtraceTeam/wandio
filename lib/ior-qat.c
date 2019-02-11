@@ -24,14 +24,13 @@
  *
  */
 
-
 #include "config.h"
-#include "wandio.h"
+#include <assert.h>
+#include <errno.h>
 #include <qatzip.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-#include <assert.h>
+#include "wandio.h"
 
 extern io_source_t qat_source;
 
@@ -45,14 +44,9 @@ static int64_t qat_read(io_t *io, void *buffer, int64_t len) {
 }
 
 static void qat_close(io_t *io) {
-
 }
 
-io_source_t qat_source = {
-        "qatr",
-        qat_read,
-        NULL,   /* peek */
-        NULL,   /* tell */
-        NULL,   /* seek */
-        qat_close
-};
+io_source_t qat_source = {"qatr",   qat_read, NULL, /* peek */
+                          NULL,                     /* tell */
+                          NULL,                     /* seek */
+                          qat_close};

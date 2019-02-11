@@ -24,81 +24,68 @@
  *
  */
 
-
 #define _GNU_SOURCE 1
 #include "config.h"
-#include "wandio_internal.h"
-#include "wandio.h"
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include "wandio.h"
+#include "wandio_internal.h"
 
 /* Libwandio IO module implementing a standard IO reader, i.e. no decompression
  */
 
 struct stdio_t {
-	int fd;
+        int fd;
 };
 
 extern io_source_t stdio_source;
 
 #define DATA(io) ((struct stdio_t *)((io)->data))
 
-io_t *stdio_open(const char *filename)
-{
-	io_t *io = malloc(sizeof(io_t));
-	io->data = malloc(sizeof(struct stdio_t));
+io_t *stdio_open(const char *filename) {
+        io_t *io = malloc(sizeof(io_t));
+        io->data = malloc(sizeof(struct stdio_t));
 
-	if (strcmp(filename,"-") == 0)
-		DATA(io)->fd = 0; /* STDIN */
-	else
-		DATA(io)->fd = open(filename,
-			O_RDONLY
+        if (strcmp(filename, "-") == 0)
+                DATA(io)->fd = 0; /* STDIN */
+        else
+                DATA(io)->fd =
+                    open(filename, O_RDONLY
 #ifdef O_DIRECT
-			|(force_directio_read?O_DIRECT:0)
+                                       | (force_directio_read ? O_DIRECT : 0)
 #endif
-			);
-	io->source = &stdio_source;
+                    );
+        io->source = &stdio_source;
 
-	if (DATA(io)->fd == -1) {
-		free(io);
-		return NULL;
-	}
+        if (DATA(io)->fd == -1) {
+                free(io);
+                return NULL;
+        }
 
-	return io;
+        return io;
 }
 
-static int64_t stdio_read(io_t *io, void *buffer, int64_t len)
-{
-	return read(DATA(io)->fd,buffer,len);
+static int64_t stdio_read(io_t *io, void *buffer, int64_t len) {
+        return read(DATA(io)->fd, buffer, len);
 }
 
-static int64_t stdio_tell(io_t *io)
-{
-	return lseek(DATA(io)->fd, 0, SEEK_CUR);
+static int64_t stdio_tell(io_t *io) {
+        return lseek(DATA(io)->fd, 0, SEEK_CUR);
 }
 
-static int64_t stdio_seek(io_t *io, int64_t offset, int whence)
-{
-	return lseek(DATA(io)->fd, offset, whence);
+static int64_t stdio_seek(io_t *io, int64_t offset, int whence) {
+        return lseek(DATA(io)->fd, offset, whence);
 }
 
-static void stdio_close(io_t *io)
-{
-	close(DATA(io)->fd);
-	free(io->data);
-	free(io);
+static void stdio_close(io_t *io) {
+        close(DATA(io)->fd);
+        free(io->data);
+        free(io);
 }
 
-io_source_t stdio_source = {
-	"stdio",
-	stdio_read,
-	NULL,
-	stdio_tell,
-	stdio_seek,
-	stdio_close
-};
-
+io_source_t stdio_source = {"stdio",    stdio_read, NULL,
+                            stdio_tell, stdio_seek, stdio_close};
