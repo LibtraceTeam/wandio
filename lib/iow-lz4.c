@@ -1,7 +1,7 @@
 /*
  * This file is part of libwandio
  *
- * Copyright (c) 2007-2015 The University of Waikato, Hamilton,
+ * Copyright (c) 2007-2019 The University of Waikato, Hamilton,
  * New Zealand.
  *
  * Authors: Sergey Cherepanov

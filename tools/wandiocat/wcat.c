@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) 2007-2016 The University of Waikato, Hamilton, New Zealand.
+ * Copyright (c) 2007-2019 The University of Waikato, Hamilton, New Zealand.
  * All rights reserved.
  *
  * This file is part of libwandio.
