@@ -57,7 +57,7 @@ struct zstd_lz4_t {
         io_t *parent;
         int inbuf_index;
         int inbuf_len;
-        char inbuf[1024 * 1024];
+        unsigned char inbuf[1024 * 1024];
         bool eof;
 };
 
@@ -123,12 +123,20 @@ static int64_t zstd_lz4_read(io_t *io, void *buffer, int64_t len) {
                                     DATA(io)->inbuf_len) <
                                    256 * 1024) { /* compact, only if buffer
                                                     became smallish */
+
+#if HAVE_LIBLZ4_MOVABLE
+/* Older versions of liblz4 get very unhappy if you try to change the source
+ * buffer pointers mid-decompress, so we can only perform this memmove
+ * if we have liblz4 1.7.3 or later.
+ * This affects the liblz4-dev packages for both stretch and bionic :(
+ */
                                 memmove(DATA(io)->inbuf,
                                         DATA(io)->inbuf + DATA(io)->inbuf_index,
                                         data_size);
 
                                 DATA(io)->inbuf_index = 0;
                                 DATA(io)->inbuf_len = data_size;
+#endif
                         }
                         while (true) {
                                 /* Decompressing large buffers optimize zstd and
@@ -262,9 +270,11 @@ static int64_t zstd_lz4_read(io_t *io, void *buffer, int64_t len) {
                                 }
 #endif
                         }
-                        if (DATA(io)->inbuf_index == inbuf_index_save) {
-                                fprintf(stderr, "zstd - lz4 decoder does not "
-                                                "advance reads");
+                        if (DATA(io)->inbuf_index == inbuf_index_save
+                                        && outbuf_index == 0) {
+                                fprintf(stderr, "zstd - lz4 decoder has made "
+                                                "no progress, probably stuck?"
+                                                "\n");
                                 errno = EIO;
                                 DATA(io)->err = ERR_ERROR;
                                 errno = EIO;

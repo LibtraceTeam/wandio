@@ -267,6 +267,10 @@ AS_IF([test "x$have_lz4" = "xyes"], [
                 LIBWANDIO_LIBS="$LIBWANDIO_LIBS -llz4"
         fi
         AC_DEFINE(HAVE_LIBLZ4, 1, "Compiled with lz4 support")
+        AC_CHECK_LIB(lz4, LZ4F_getVersion, have_lz4_173=yes, have_lz4_173=no)
+        if test "x$have_lz4_173" = "xyes"; then
+                AC_DEFINE(HAVE_LIBLZ4_MOVABLE, 1, "If defined then liblz4 does NOT have the ERROR_srcPtr_wrong bug")
+        fi
         with_lz4=yes],
 
 
