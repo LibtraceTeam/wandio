@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export PATH="../tools/wandiocat:$PATH"
+
 OK=0
 FAIL=""
 
@@ -98,6 +100,8 @@ REQBINARIES=( gzip bzip2 xz lz4 zstd lzop )
 for bin in ${REQBINARIES[*]}; do
         command -v $bin > /dev/null || echo "$bin not detected on system -- $bin tests may fail"
 done
+
+cat files/big.txt | md5sum | cut -d " " -f 1 > /tmp/wandiobase.md5
 
 echo -n \* Reading text...
 do_read_test text files/big.txt
