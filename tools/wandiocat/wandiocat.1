@@ -1,0 +1,56 @@
+.TH WANDIOCAT 7 "2019-02-12" "wandiocat" "libwandio"
+
+.SH NAME
+wandiocat \- read and write files using libwandio routines
+
+.SH SYNOPSIS
+\fBwandiocat\fR [\fB-z\fR \fIlevel\fR] [\fB-Z\fR \fImethod\fR]
+        [\fB-o\fR \fIoutputfilename\fR] \fBinputfile\fR [\fBinputfile\fR ...]
+
+.SH DESCRIPTION
+\fBwandiocat\fR is a simple program designed to demonstrate how libwandio can
+be used to easily read and write files using any of the supported compression
+methods. Each input file specified will be concatenated into a single
+output file (or written to standard output if no output file is specified)
+which will be compressed according to the compression method and level
+supplied by the user.
+
+wandiocat will automatically detect the compression method required to
+read the input files, so they do not need to be decompressed first.
+
+.SH OPTIONS
+.TP
+\fB-h\fR
+Show summary of supported command-line options.
+
+.TP
+\fB-Z \fImethod\fR
+Specifies which compression method should be used to write output.
+Must be one of 'gzip', 'bzip2', 'lzma', 'lzo', 'zstd', or 'lz4'. If
+not specified, the output is written uncompressed.
+
+.TP
+\fB-z \fIlevel\fR
+Specifies the compression level to be used when writing output. The level
+must be an integer value between 0 (uncompressed) and 9 (maximum compression)
+inclusive. Usually compression level 1 is sufficient for most purposes.
+Defaults to 0.
+
+.TP
+\fB-o \fIoutputfilename\fR
+Sets the name of the output file. If not specified, output will be written
+to standard output instead.
+
+.SH SECURITY
+\fBwandiocat\fR should usually be run unprivileged. The only exception would
+be when the user wants to use Intel QuickAssist hardware to perform gzip
+compression (and has configured and installed libwandio with QuickAssist
+support enabled) -- in this case, \fBwandiocat\fR may need to be run as root
+to be able to access the hardware.
+
+.SH AUTHOR
+wandiocat was originally written by Perry Lorier, while working for the
+University of Waikato WAND Network Research Group <contact@wand.net.nz>.
+
+.PP
+This manual page was written by Shane Alcock <shane.alcock@waikato.ac.nz>
