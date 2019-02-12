@@ -7,6 +7,9 @@ Strongly recommended:
  * zlib-dev
  * libbz2-dev
  * liblzma-dev
+ * liblzo2-dev
+ * liblz4-dev
+ * libzstd-dev
 
 ----------------------------------
 
