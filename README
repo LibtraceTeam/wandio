@@ -25,12 +25,12 @@ provides transparent compression/decompression for the following formats:
 WANDIO also improves IO performance by performing compression/decompression in a
 separate thread (if pthreads are available).
 
+Documentation for WANDIO and its included tools can be found at
+https://github.com/wanduow/wandio/wiki
+
 Bugs should be reported by either emailing contact@wand.net.nz or filing
 an issue at https://github.com/wanduow/wandio
 
 It is licensed under the Lesser GNU General Public License (LGPL) version 3.
 Please see the included files COPYING and COPYING.LESSER for details of this
 license.
-
-For further information, please contact the WAND group. See
-http://www.wand.net.nz/ for details.
