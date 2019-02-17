@@ -124,7 +124,7 @@ static void parse_env(void) {
 #endif
 
 static io_t *create_io_reader(const char *filename, int autodetect) {
-        io_t *io;
+        io_t *io, *base;
         /* Use a peeking reader to look at the start of the trace file and
          * determine what type of compression may have been used to write
          * the file */
@@ -143,11 +143,11 @@ static io_t *create_io_reader(const char *filename, int autodetect) {
         }
         if (stdfile) {
                 DEBUG_PIPELINE("stdio");
-                io = stdio_open(filename);
+                base = stdio_open(filename);
         } else {
 #if HAVE_HTTP
                 DEBUG_PIPELINE("http");
-                io = http_open(filename);
+                base = http_open(filename);
 #else
                 fprintf(stderr,
                         "%s appears to be an HTTP URI but libwandio has "
@@ -158,36 +158,45 @@ static io_t *create_io_reader(const char *filename, int autodetect) {
         }
 
         DEBUG_PIPELINE("peek");
-        io = peek_open(io);
+        base = peek_open(base);
         unsigned char buffer[1024];
         int len;
-        if (!io)
+        if (!base)
                 return NULL;
-        len = wandio_peek(io, buffer, sizeof(buffer));
+        len = wandio_peek(base, buffer, sizeof(buffer));
         /* Auto detect gzip compressed data -- if autodetect is false,
          * instead we just assume uncompressed.
          */
 
+        io = NULL;
         if (autodetect) {
                 if (len >= 3 && buffer[0] == 0x1f && buffer[1] == 0x8b &&
                     buffer[2] == 0x08) {
-#if HAVE_LIBZ
-                        DEBUG_PIPELINE("zlib");
-                        io = zlib_open(io);
-#else
-                        fprintf(stderr,
-                                "File %s is gzip compressed but libwandio has "
-                                "not been built with zlib support!\n",
-                                filename);
-                        return NULL;
+#if HAVE_LIBQATZIP
+                        /* Try using libqat. If this fails, fall back to
+                         * standard zlib */
+                        io = qat_open(base);
 #endif
+#if HAVE_LIBZ
+                        if (io == NULL) {
+                                DEBUG_PIPELINE("zlib");
+                                io = zlib_open(base);
+                        }
+#endif
+                        if (io == NULL) {
+                                fprintf(stderr,
+                                        "File %s is gzip compressed but libwandio has "
+                                        "not been built with zlib support!\n",
+                                        filename);
+                                return NULL;
+                        }
                 }
                 /* Auto detect compress(1) compressed data (gzip can read this)
                  */
                 if (len >= 2 && buffer[0] == 0x1f && buffer[1] == 0x9d) {
 #if HAVE_LIBZ
                         DEBUG_PIPELINE("zlib");
-                        io = zlib_open(io);
+                        io = zlib_open(base);
 #else
                         fprintf(stderr,
                                 "File %s is compress(1) compressed but "
@@ -203,7 +212,7 @@ static io_t *create_io_reader(const char *filename, int autodetect) {
                     buffer[2] == 'h') {
 #if HAVE_LIBBZ2
                         DEBUG_PIPELINE("bzip");
-                        io = bz_open(io);
+                        io = bz_open(base);
 #else
                         fprintf(stderr,
                                 "File %s is bzip compressed but libwandio has "
@@ -217,7 +226,7 @@ static io_t *create_io_reader(const char *filename, int autodetect) {
                     buffer[2] == 'z' && buffer[3] == 'X' && buffer[4] == 'Z') {
 #if HAVE_LIBLZMA
                         DEBUG_PIPELINE("lzma");
-                        io = lzma_open(io);
+                        io = lzma_open(base);
 #else
                         fprintf(stderr,
                                 "File %s is lzma compressed but libwandio has "
@@ -231,7 +240,7 @@ static io_t *create_io_reader(const char *filename, int autodetect) {
                     (buffer[2] == 0x2f) && (buffer[3] == 0xfd)) {
 #if HAVE_LIBZSTD
                         DEBUG_PIPELINE("zstd");
-                        io = zstd_lz4_open(io);
+                        io = zstd_lz4_open(base);
 #else
                         fprintf(stderr,
                                 "File %s is zstd compress but libwandio has "
@@ -245,7 +254,7 @@ static io_t *create_io_reader(const char *filename, int autodetect) {
                     (buffer[2] == 0x4d) && (buffer[3] == 0x18)) {
 #if HAVE_LIBLZ4
                         DEBUG_PIPELINE("lz4");
-                        io = zstd_lz4_open(io);
+                        io = zstd_lz4_open(base);
 #else
                         fprintf(stderr,
                                 "File %s is lz4 compress but libwandio has not "
@@ -261,7 +270,7 @@ static io_t *create_io_reader(const char *filename, int autodetect) {
                     (buffer[3] == 0x18)) {
 #if HAVE_LIBLZ4 || HAVE_LIBZSTD
                         DEBUG_PIPELINE("lz4 or zstd");
-                        io = zstd_lz4_open(io);
+                        io = zstd_lz4_open(base);
 #else
                         fprintf(stderr,
                                 "File %s is lz4 or zstd compress but libwandio "
@@ -274,6 +283,9 @@ static io_t *create_io_reader(const char *filename, int autodetect) {
         }
         /* Now open a threaded, peekable reader using the appropriate module
          * to read the data */
+        if (io == NULL) {
+                io = base;
+        }
 
         if (use_threads) {
                 DEBUG_PIPELINE("thread");
