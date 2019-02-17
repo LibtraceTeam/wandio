@@ -341,23 +341,29 @@ iow_t *lzo_wopen(iow_t *child, int compress_level) {
         wandio_wwrite(DATA(iow)->child, buffer.buffer, buffer.offset);
 
         /* Set up the thread pool -- one thread per core */
-        DATA(iow)->threads =
-            min((uint32_t)sysconf(_SC_NPROCESSORS_ONLN), use_threads);
-        DATA(iow)->thread =
-            malloc(sizeof(struct lzothread_t) * DATA(iow)->threads);
-        DATA(iow)->next_thread = 0;
-        for (i = 0; i < DATA(iow)->threads; ++i) {
-                pthread_cond_init(&DATA(iow)->thread[i].in_ready, NULL);
-                pthread_cond_init(&DATA(iow)->thread[i].out_ready, NULL);
-                pthread_mutex_init(&DATA(iow)->thread[i].mutex, NULL);
-                DATA(iow)->thread[i].closing = false;
-                DATA(iow)->thread[i].num = i;
-                DATA(iow)->thread[i].state = EMPTY;
-                DATA(iow)->thread[i].inbuf.offset = 0;
+        if (use_threads > 0) {
+                DATA(iow)->threads =
+                    min((uint32_t)sysconf(_SC_NPROCESSORS_ONLN), use_threads);
+                DATA(iow)->thread =
+                    malloc(sizeof(struct lzothread_t) * DATA(iow)->threads);
+                DATA(iow)->next_thread = 0;
+                for (i = 0; i < DATA(iow)->threads; ++i) {
+                        pthread_cond_init(&DATA(iow)->thread[i].in_ready, NULL);
+                        pthread_cond_init(&DATA(iow)->thread[i].out_ready, NULL);
+                        pthread_mutex_init(&DATA(iow)->thread[i].mutex, NULL);
+                        DATA(iow)->thread[i].closing = false;
+                        DATA(iow)->thread[i].num = i;
+                        DATA(iow)->thread[i].state = EMPTY;
+                        DATA(iow)->thread[i].inbuf.offset = 0;
 
-                pthread_create(&DATA(iow)->thread[i].thread, NULL,
-                               lzo_compress_thread,
-                               (void *)&DATA(iow)->thread[i]);
+                        pthread_create(&DATA(iow)->thread[i].thread, NULL,
+                                       lzo_compress_thread,
+                                       (void *)&DATA(iow)->thread[i]);
+                }
+        } else {
+                DATA(iow)->threads = 0;
+                DATA(iow)->thread = NULL;
+                DATA(iow)->next_thread = 9;
         }
 
         return iow;
@@ -510,23 +516,25 @@ static void lzo_wclose(iow_t *iow) {
         int i;
 
         /* Flush the last buffer */
-        pthread_mutex_lock(&get_next_thread(iow)->mutex);
-        if (get_next_thread(iow)->state == EMPTY &&
-            get_next_thread(iow)->inbuf.offset != 0) {
-                get_next_thread(iow)->state = WAITING;
-                pthread_cond_signal(&get_next_thread(iow)->in_ready);
-        }
-        pthread_mutex_unlock(&get_next_thread(iow)->mutex);
+        if (DATA(iow)->thread != NULL) {
+                pthread_mutex_lock(&get_next_thread(iow)->mutex);
+                if (get_next_thread(iow)->state == EMPTY &&
+                    get_next_thread(iow)->inbuf.offset != 0) {
+                        get_next_thread(iow)->state = WAITING;
+                        pthread_cond_signal(&get_next_thread(iow)->in_ready);
+                }
+                pthread_mutex_unlock(&get_next_thread(iow)->mutex);
 
-        DATA(iow)->next_thread =
-            (DATA(iow)->next_thread + 1) % DATA(iow)->threads;
+                DATA(iow)->next_thread =
+                    (DATA(iow)->next_thread + 1) % DATA(iow)->threads;
 
-        /* Right, now we have to shutdown all our threads -- in order */
-        for (i = DATA(iow)->next_thread; i < DATA(iow)->threads; ++i) {
-                shutdown_thread(iow, &DATA(iow)->thread[i]);
-        }
-        for (i = 0; i < DATA(iow)->next_thread; ++i) {
-                shutdown_thread(iow, &DATA(iow)->thread[i]);
+                /* Right, now we have to shutdown all our threads -- in order */
+                for (i = DATA(iow)->next_thread; i < DATA(iow)->threads; ++i) {
+                        shutdown_thread(iow, &DATA(iow)->thread[i]);
+                }
+                for (i = 0; i < DATA(iow)->next_thread; ++i) {
+                        shutdown_thread(iow, &DATA(iow)->thread[i]);
+                }
         }
 
         /* Write out an end of file marker */
