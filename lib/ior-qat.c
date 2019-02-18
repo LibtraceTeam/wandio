@@ -97,6 +97,13 @@ io_t *qat_open(io_t *parent) {
         DATA(io)->err = ERR_OK;
         DATA(io)->insize = sizeof(DATA(io)->inbuff);
 
+        if ((x = qzInit(&(DATA(io)->sess), 0)) != QZ_OK) {
+                qat_perror(x);
+                free(io->data);
+                free(io);
+                return NULL;
+        }
+
         params.huffman_hdr = QZ_DYNAMIC_HDR;
         params.direction = QZ_DIR_DECOMPRESS;
 	params.comp_lvl = 1;

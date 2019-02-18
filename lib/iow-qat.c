@@ -97,7 +97,7 @@ iow_t *qat_wopen(iow_t *child, int compress_level) {
         DATA(iow)->child = child;
         DATA(iow)->err = ERR_OK;
 
-        if ((x = qzInit(&(DATA(iow)->sess), 0)) < 0) {
+        if ((x = qzInit(&(DATA(iow)->sess), 0)) != QZ_OK) {
                 qat_perror(x);
                 free(iow->data);
                 free(iow);
