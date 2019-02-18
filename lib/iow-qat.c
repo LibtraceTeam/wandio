@@ -118,7 +118,7 @@ iow_t *qat_wopen(iow_t *child, int compress_level) {
         params.req_cnt_thrshold = 4;
         params.wait_cnt_thrshold = QZ_WAIT_CNT_THRESHOLD_DEFAULT;
 
-        if ((x = qzSetupSession(&(DATA(iow)->sess), &params)) < 0) {
+        if ((x = qzSetupSession(&(DATA(iow)->sess), &params)) != QZ_OK) {
                 qat_perror(x);
                 free(iow->data);
                 free(iow);
