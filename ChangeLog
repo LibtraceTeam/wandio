@@ -3,8 +3,8 @@ Version 4.0.1
 Thanks to Sergey Cherepanov for contributing to this release
 
  * Added support for both reading and writing lz4 compressed files.
- * Added support for using Intel QuickAssist (if present) for writing
-   gzip compressed files.
+ * Added support for using Intel QuickAssist (if present) for reading
+   and writing gzip compressed files.
  * Some potential performance improvements by aligning buffers sensibly.
  * Fixed "inline" errors when building with LLVM.
 
