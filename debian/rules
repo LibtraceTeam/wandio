@@ -8,6 +8,8 @@ export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 DPKG_EXPORT_BUILDFLAGS = 1
 include /usr/share/dpkg/buildflags.mk
 
+DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
+
 # These are used for cross-compiling and for saving the configure script
 # from having to guess our platform (since we know it already)
 DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
@@ -30,7 +32,8 @@ configure-stamp: configure
 	./configure $(CONFFLAGS) \
 		   --prefix=/usr \
 		   --mandir=\$${prefix}/share/man \
-		   --infodir=\$${prefix}/share/info
+		   --infodir=\$${prefix}/share/info \
+                   --libdir=\$${prefix}/lib/${DEB_HOST_MULTIARCH}
 	
 	touch configure-stamp
 

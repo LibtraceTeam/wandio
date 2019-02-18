@@ -1,2 +1,2 @@
 usr/include/wandio.h
-usr/lib/libwandio.so
+usr/lib/*/libwandio.so
