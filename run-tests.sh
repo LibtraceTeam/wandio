@@ -17,7 +17,8 @@ chmod 644 /etc/apt/trusted.gpg.d/wand.gpg
 apt-get update
 
 apt-get install -y libbz2-dev liblzma-dev liblzo2-dev libcurl4-openssl-dev \
-        liblz4-dev libncurses5-dev libzstd-dev zlib1g-dev
+        liblz4-dev libncurses5-dev libzstd-dev zlib1g-dev build-essential \
+        autoconf automake libtool
 apt-get install -y zstd lzop xz-utils liblz4-tool
 
 ./bootstrap.sh && ./configure && make
