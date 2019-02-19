@@ -77,7 +77,7 @@ run-unit-tests-ubuntu-xenial:
   stage: test
   image: ubuntu:xenial
   script:
-    - cd test && ./do-basic-tests.sh
+    - ./run-tests.sh
   only:
     - tags
 
@@ -85,7 +85,7 @@ run-unit-tests-ubuntu-bionic:
   stage: test
   image: ubuntu:bionic
   script:
-    - cd test && ./do-basic-tests.sh
+    - ./run-tests.sh
   only:
     - tags
 
@@ -93,7 +93,7 @@ run-unit-tests-ubuntu-cosmic:
   stage: test
   image: ubuntu:cosmic
   script:
-    - cd test && ./do-basic-tests.sh
+    - ./run-tests.sh
   only:
     - tags
 
@@ -101,7 +101,7 @@ run-unit-tests-debian-stretch:
   stage: test
   image: debian:stretch
   script:
-    - cd test && ./do-basic-tests.sh
+    - ./run-tests.sh
   only:
     - tags
 
