@@ -16,6 +16,7 @@ echo "deb https://dl.bintray.com/wand/general $(lsb_release -sc) main" | tee -a 
 curl --silent "https://bintray.com/user/downloadSubjectPublicKey?username=wand" | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/wand.gpg --import
 
 # Install compression tools for running unit tests post-build
+apt-get update
 apt-get install -y lzop zstd xz-utils liblz4-tool
 
 dpkg-parsechangelog -S version | grep -q ${CI_COMMIT_REF_NAME} || debchange --newversion ${CI_COMMIT_REF_NAME} -b "New upstream release"
