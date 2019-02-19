@@ -51,8 +51,9 @@ endif
 if HAVE_HTTP
 LIBTRACEIO_HTTP=ior-http.c curl-helper.c curl-helper.h \
 	ior-swift.c \
-	swift-keystone.c swift-keystone.h \
-	jsmn.c jsmn.h jsmn_utils.c jsmn_utils.h
+	swift-support/keystone.c swift-support/keystone.h \
+	swift-support/jsmn.c swift-support/jsmn.h \
+	swift-support/jsmn_utils.c swift-support/jsmn_utils.h
 else
 LIBTRACE_HTTP=
 endif

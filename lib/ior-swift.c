@@ -33,7 +33,7 @@
 
 #include "config.h"
 #include "wandio.h"
-#include "swift-keystone.h"
+#include "swift-support/keystone.h"
 #include <stdlib.h>
 #include <string.h>
 

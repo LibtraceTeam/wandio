@@ -30,7 +30,7 @@
 #include "wandio.h"
 #include "curl-helper.h"
 #include "jsmn_utils.h"
-#include "swift-keystone.h"
+#include "swift-support/keystone.h"
 #include <assert.h>
 #include <curl/curl.h>
 #include <stdio.h>
