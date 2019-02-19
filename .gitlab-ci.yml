@@ -109,7 +109,7 @@ run-unit-tests-debian-jessie:
   stage: test
   image: debian:jessie
   script:
-    - cd test && ./do-basic-tests.sh
+    - ./run-tests.sh
   only:
     - tags
 

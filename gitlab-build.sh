@@ -17,9 +17,7 @@ curl --silent "https://bintray.com/user/downloadSubjectPublicKey?username=wand" 
 
 chmod 644 /etc/apt/trusted.gpg.d/wand.gpg
 
-# Install compression tools for running unit tests post-build
 apt-get update
-apt-get install -y lzop zstd xz-utils liblz4-tool
 
 dpkg-parsechangelog -S version | grep -q ${CI_COMMIT_REF_NAME} || debchange --newversion ${CI_COMMIT_REF_NAME} -b "New upstream release"
 mk-build-deps -i -r -t 'apt-get -f -y --force-yes'
