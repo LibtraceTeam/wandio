@@ -102,7 +102,7 @@ static size_t auth_header_cb(char *buf, size_t size, size_t nmemb, void *data) {
       return 0;
     }
     memcpy(p, buf + strlen(TOKEN_HDR), token_len);
-    p[token_len] = '\0';
+    p[token_len - 1] = '\0';
     token->token = p;
   }
 
