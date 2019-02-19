@@ -150,10 +150,10 @@ static io_t *create_io_reader(const char *filename, int autodetect) {
                 p = strstr(filename, "swift://");
                 if (p && *p) {
                         DEBUG_PIPELINE("swift");
-                        io = swift_open(filename);
+                        base = swift_open(filename);
                 } else {
                         DEBUG_PIPELINE("http");
-                        io = http_open(filename);
+                        base = http_open(filename);
                 }
 #else
                 fprintf(stderr, "%s appears to be an HTTP or Swift URI but libwandio has not been built with http (libcurl) support!\n", filename);

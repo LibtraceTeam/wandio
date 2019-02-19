@@ -226,7 +226,7 @@ io_t *http_open_hdrs(const char *filename, char **hdrs, int hdrs_cnt)
 {
   	io_t *io = malloc(sizeof(io_t));
         if (!io) return NULL;
-	io->data = malloc(sizeof(struct http_t));
+	io->data = calloc(sizeof(struct http_t), 1);
         if (!io->data) {
                 free(io);
                 return NULL;
