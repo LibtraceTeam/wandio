@@ -15,6 +15,8 @@ echo "deb https://dl.bintray.com/wand/general $(lsb_release -sc) main" | tee -a 
 
 curl --silent "https://bintray.com/user/downloadSubjectPublicKey?username=wand" | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/wand.gpg --import
 
+chmod 644 /etc/apt/trusted.gpg.d/wand.gpg
+
 # Install compression tools for running unit tests post-build
 apt-get update
 apt-get install -y lzop zstd xz-utils liblz4-tool
