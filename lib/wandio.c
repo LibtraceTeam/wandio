@@ -525,7 +525,7 @@ DLLEXPORT int64_t wandio_generic_fgets(void *file, void *buffer, off_t len,
 DLLEXPORT int64_t wandio_fgets(io_t *file, void *buffer, int64_t len,
                                int chomp) {
 
-        return generic_fgets(file, buffer, len, chomp,
+        return wandio_generic_fgets(file, buffer, len, chomp,
                              (read_cb_t *)wandio_read);
 }
 
