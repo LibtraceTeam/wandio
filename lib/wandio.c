@@ -23,6 +23,7 @@
  *
  *
  */
+#define _GNU_SOURCE
 
 #include "config.h"
 #include "wandio.h"
@@ -30,6 +31,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <inttypes.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 #include "wandio_internal.h"
@@ -60,7 +62,7 @@ uint64_t write_waits = 0;
 static const char *ctype_name(int compress_type) {
 
         int i;
-        for (i = 0; ; i++) {
+        for (i = 0;; i++) {
                 if (compression_type[i].compress_type == compress_type) {
                         return compression_type[i].name;
                 }
@@ -171,7 +173,10 @@ static io_t *create_io_reader(const char *filename, int autodetect) {
                         base = http_open(filename);
                 }
 #else
-                fprintf(stderr, "%s appears to be an HTTP or Swift URI but libwandio has not been built with http (libcurl) support!\n", filename);
+                fprintf(stderr,
+                        "%s appears to be an HTTP or Swift URI but libwandio "
+                        "has not been built with http (libcurl) support!\n",
+                        filename);
                 return NULL;
 #endif
         }
@@ -204,7 +209,8 @@ static io_t *create_io_reader(const char *filename, int autodetect) {
 #endif
                         if (io == NULL) {
                                 fprintf(stderr,
-                                        "File %s is gzip compressed but libwandio has "
+                                        "File %s is gzip compressed but "
+                                        "libwandio has "
                                         "not been built with zlib support!\n",
                                         filename);
                                 return NULL;
@@ -445,8 +451,11 @@ DLLEXPORT iow_t *wandio_wcreate(const char *filename, int compress_type,
 #endif
         }
         if (compress_type != WANDIO_COMPRESS_NONE && iow == base) {
-                fprintf(stderr, "warning: %s compression requested but libwandio has not been built \nwith support for that method, falling back to stdio\n",
-                                ctype_name(compress_type));
+                fprintf(stderr,
+                        "warning: %s compression requested but libwandio has "
+                        "not been built \nwith support for that method, "
+                        "falling back to stdio\n",
+                        ctype_name(compress_type));
         }
 
         /* Open a threaded writer */
@@ -474,4 +483,132 @@ DLLEXPORT void wandio_wdestroy(iow_t *iow) {
                 fprintf(stderr,
                         "LIBTRACEIO STATS: %" PRIu64 " blocks on write\n",
                         write_waits);
+}
+
+/** Alistair's API extensions from "wandio_util" */
+
+DLLEXPORT int64_t generic_fgets(void *file, void *buffer, off_t len, int chomp,
+                                read_cb_t *read_cb) {
+        assert(file != NULL);
+
+        char cbuf;
+        int rval;
+        int i;
+        int done = 0;
+
+        if (buffer == NULL || len <= 0) {
+                return 0;
+        }
+
+        for (i = 0; !done && i < len - 1; i++) {
+                if ((rval = read_cb(file, &cbuf, 1)) < 0) {
+                        return rval;
+                }
+                if (rval == 0) {
+                        done = 1;
+                        i--;
+                } else {
+                        ((char *)buffer)[i] = cbuf;
+                        if (cbuf == '\n') {
+                                if (chomp != 0) {
+                                        ((char *)buffer)[i] = '\0';
+                                }
+                                done = 1;
+                        }
+                }
+        }
+
+        ((char *)buffer)[i] = '\0';
+        return i;
+}
+
+DLLEXPORT int64_t wandio_fgets(io_t *file, void *buffer, int64_t len,
+                               int chomp) {
+
+        return generic_fgets(file, buffer, len, chomp,
+                             (read_cb_t *)wandio_read);
+}
+
+DLLEXPORT int wandio_detect_compression_type(const char *filename) {
+        const char *ptr = filename;
+
+        size_t len = strlen(filename);
+
+        if (len >= strlen(WANDIO_ZLIB_SUFFIX)) {
+                /* check for a .gz extension */
+                ptr += (len - strlen(WANDIO_ZLIB_SUFFIX));
+                if (strcmp(ptr, WANDIO_ZLIB_SUFFIX) == 0) {
+                        return WANDIO_COMPRESS_ZLIB;
+                }
+
+                ptr = filename;
+        }
+
+        if (len >= strlen(WANDIO_BZ2_SUFFIX)) {
+                /* check for a .bz2 extension */
+                ptr += (len - strlen(WANDIO_BZ2_SUFFIX));
+                if (strcmp(ptr, WANDIO_BZ2_SUFFIX) == 0) {
+                        return WANDIO_COMPRESS_BZ2;
+                }
+        }
+
+        if (len >= strlen(WANDIO_LZMA_SUFFIX)) {
+                /* check for a .xz extension */
+                ptr += (len - strlen(WANDIO_LZMA_SUFFIX));
+                if (strcmp(ptr, WANDIO_LZMA_SUFFIX) == 0) {
+                        return WANDIO_COMPRESS_LZMA;
+                }
+        }
+
+        if (len >= strlen(WANDIO_LZO_SUFFIX)) {
+                /* check for a .lzo extension */
+                ptr += (len - strlen(WANDIO_LZO_SUFFIX));
+                if (strcmp(ptr, WANDIO_LZO_SUFFIX) == 0) {
+                        return WANDIO_COMPRESS_LZO;
+                }
+        }
+
+        if (len >= strlen(WANDIO_LZ4_SUFFIX)) {
+                /* check for a .lz4 extension */
+                ptr += (len - strlen(WANDIO_LZ4_SUFFIX));
+                if (strcmp(ptr, WANDIO_LZ4_SUFFIX) == 0) {
+                        return WANDIO_COMPRESS_LZ4;
+                }
+        }
+
+        if (len >= strlen(WANDIO_ZSTD_SUFFIX)) {
+                /* check for a .zst extension */
+                ptr += (len - strlen(WANDIO_ZSTD_SUFFIX));
+                if (strcmp(ptr, WANDIO_ZSTD_SUFFIX) == 0) {
+                        return WANDIO_COMPRESS_ZSTD;
+                }
+        }
+
+        /* this is a suffix we don't know. don't compress */
+        return WANDIO_COMPRESS_NONE;
+}
+
+DLLEXPORT inline off_t wandio_vprintf(iow_t *file, const char *format,
+                                      va_list args) {
+        assert(file != NULL);
+        char *buf;
+        size_t len;
+        int ret;
+
+        if ((ret = vasprintf(&buf, format, args)) < 0)
+                return ret;
+        len = strlen(buf);
+        len = len == (unsigned)len
+                  ? (size_t)wandio_wwrite(file, buf, (unsigned)len)
+                  : 0;
+        free(buf);
+        return len;
+}
+
+DLLEXPORT inline off_t wandio_printf(iow_t *file, const char *format, ...) {
+        va_list ap;
+
+        va_start(ap, format);
+        return wandio_vprintf(file, format, ap);
+        va_end(ap);
 }

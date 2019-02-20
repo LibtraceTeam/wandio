@@ -27,6 +27,7 @@
 #ifndef IO_H
 #define IO_H 1 /**< Guard Define */
 #include <inttypes.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -58,6 +59,13 @@ extern "C" {
 #endif
 
 #define WANDIO_BUFFER_SIZE (1024 * 1024)
+
+#define WANDIO_ZLIB_SUFFIX ".gz"
+#define WANDIO_BZ2_SUFFIX ".bz2"
+#define WANDIO_LZMA_SUFFIX ".xz"
+#define WANDIO_LZ4_SUFFIX ".lz4"
+#define WANDIO_ZSTD_SUFFIX ".zst"
+#define WANDIO_LZO_SUFFIX ".lzo"
 
 typedef struct io_t io_t;   /**< Opaque IO handle structure for reading */
 typedef struct iow_t iow_t; /**< Opaque IO handle structure for writing */
@@ -354,6 +362,63 @@ int wandio_wflush(iow_t *iow);
  * @param iow		The IO writer to destroy
  */
 void wandio_wdestroy(iow_t *iow);
+
+/**
+ * Generic read call-back function pointer
+ */
+typedef int64_t(read_cb_t)(void *file, void *buffer, int64_t len);
+
+/** Generic readline function that uses a read call-back function
+ *
+ * @param file          The wandio file to read from
+ * @param buffer        The buffer to read into
+ * @param len           The maximum number of bytes to read
+ * @param chomp         Should the newline be removed
+ * @return the number of bytes actually read
+ */
+int64_t generic_fgets(void *file, void *buffer, off_t len, int chomp,
+                      read_cb_t *read_cb);
+
+/** Read a line from the given wandio file pointer
+ *
+ * @param file          The wandio file to read from
+ * @param buffer        The buffer to read into
+ * @param len           The maximum number of bytes to read
+ * @param chomp         Should the newline be removed
+ * @return the number of bytes actually read
+ */
+int64_t wandio_fgets(io_t *file, void *buffer, int64_t len, int chomp);
+
+/** Attempt to detect desired compression for an output file based on file name
+ *
+ * @param filename      The filename to test for a compression extension
+ * @return a wandio compression type suitable for use with wandio_wcreate
+ */
+int wandio_detect_compression_type(const char *filename);
+
+/** Print a string to a wandio file using a vprintf-style API
+ *
+ * @param file          The file to write to
+ * @param format        The format string to write
+ * @param args          The arguments to the format string
+ * @return The amount of data written, or -1 if an error occurs
+ *
+ * The arguments for this function are the same as those for vprintf(3). See the
+ * vprintf(3) manpage for more details.
+ */
+off_t wandio_vprintf(iow_t *file, const char *format, va_list args);
+
+/** Print a string to a wandio file using a printf-style API
+ *
+ * @param file          The file to write to
+ * @param format        The format string to write
+ * @param ...           The arguments to the format string
+ * @return The amount of data written, or -1 if an error occurs
+ *
+ * The arguments for this function are the same as those for printf(3). See the
+ * printf(3) manpage for more details.
+ */
+off_t wandio_printf(iow_t *file, const char *format, ...);
 
 /** @} */
 #ifdef __cplusplus
