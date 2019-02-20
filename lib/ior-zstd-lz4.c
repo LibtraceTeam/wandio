@@ -32,7 +32,7 @@
 #if HAVE_LIBZSTD
 #include <zstd.h>
 #endif
-#if HAVE_LIBLZ4
+#if HAVE_LIBLZ4F
 #include <lz4frame.h>
 #endif
 #include <errno.h>
@@ -49,7 +49,7 @@ struct zstd_lz4_t {
         ZSTD_inBuffer input_buffer;
         ZSTD_outBuffer output_buffer;
 #endif
-#if HAVE_LIBLZ4
+#if HAVE_LIBLZ4F
         LZ4F_decompressionContext_t dcCtxt;
 #endif
         enum err_t err;
@@ -84,7 +84,7 @@ io_t *zstd_lz4_open(io_t *parent) {
         DATA(io)->output_buffer.dst = NULL;
         DATA(io)->output_buffer.pos = 0;
 #endif
-#if HAVE_LIBLZ4
+#if HAVE_LIBLZ4F
         LZ4F_errorCode_t result =
             LZ4F_createDecompressionContext(&DATA(io)->dcCtxt, LZ4F_VERSION);
         if (LZ4F_isError(result)) {
@@ -124,7 +124,7 @@ static int64_t zstd_lz4_read(io_t *io, void *buffer, int64_t len) {
                                    256 * 1024) { /* compact, only if buffer
                                                     became smallish */
 
-#if HAVE_LIBLZ4_MOVABLE
+#if HAVE_LIBLZ4F_MOVABLE
 /* Older versions of liblz4 get very unhappy if you try to change the source
  * buffer pointers mid-decompress, so we can only perform this memmove
  * if we have liblz4 1.7.3 or later.
@@ -192,7 +192,7 @@ static int64_t zstd_lz4_read(io_t *io, void *buffer, int64_t len) {
                                            (buf[3] == 0xfd)) {
                                         DATA(io)->dec = DEC_ZSTD;
 #endif
-#if HAVE_LIBLZ4
+#if HAVE_LIBLZ4F
                                 } else if ((buf[0] == 0x04) &&
                                            (buf[1] == 0x22) &&
                                            (buf[2] == 0x4d) &&
@@ -243,7 +243,7 @@ static int64_t zstd_lz4_read(io_t *io, void *buffer, int64_t len) {
                                         DATA(io)->dec = DEC_UNDEF;
                                 }
 #endif
-#if HAVE_LIBLZ4
+#if HAVE_LIBLZ4F
                         } else if (DATA(io)->dec == DEC_LZ4 ||
                                    DATA(io)->dec == DEC_SKIP_FRAME) {
                                 size_t src_ptr =
@@ -294,7 +294,7 @@ static void zstd_lz4_close(io_t *io) {
 #if HAVE_LIBZSTD
         ZSTD_freeDStream(DATA(io)->stream);
 #endif
-#if HAVE_LIBLZ4
+#if HAVE_LIBLZ4F
         LZ4F_freeDecompressionContext(DATA(io)->dcCtxt);
 #endif
         wandio_destroy(DATA(io)->parent);

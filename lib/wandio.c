@@ -252,7 +252,7 @@ static io_t *create_io_reader(const char *filename, int autodetect) {
 
                 if ((len >= 6) && (buffer[0] == 0x04) && (buffer[1] == 0x22) &&
                     (buffer[2] == 0x4d) && (buffer[3] == 0x18)) {
-#if HAVE_LIBLZ4
+#if HAVE_LIBLZ4F || HAVE_LIBLZ4S
                         DEBUG_PIPELINE("lz4");
                         io = zstd_lz4_open(base);
 #else
@@ -268,7 +268,7 @@ static io_t *create_io_reader(const char *filename, int autodetect) {
                 if ((len >= 6) && ((buffer[0] & 0xf0) == 0x50) &&
                     (buffer[1] == 0x2a) && (buffer[2] == 0x4d) &&
                     (buffer[3] == 0x18)) {
-#if HAVE_LIBLZ4 || HAVE_LIBZSTD
+#if HAVE_LIBLZ4F || HAVE_LIBZSTD || HAVE_LIBLZ4S
                         DEBUG_PIPELINE("lz4 or zstd");
                         io = zstd_lz4_open(base);
 #else
@@ -422,7 +422,7 @@ DLLEXPORT iow_t *wandio_wcreate(const char *filename, int compress_type,
                 iow = zstd_wopen(base, compression_level);
         }
 #endif
-#if HAVE_LIBLZ4
+#if HAVE_LIBLZ4F || HAVE_LIBLZ4S
         else if (compress_type == WANDIO_COMPRESS_LZ4) {
                 iow = lz4_wopen(base, compression_level);
         }

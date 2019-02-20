@@ -259,25 +259,36 @@ AC_ARG_WITH([lz4],
 
 AS_IF([test "x$with_lz4" != "xno"],
         [
-        AC_CHECK_LIB(lz4, LZ4F_createDecompressionContext, have_lz4=yes, have_lz4=no)
+        AC_CHECK_LIB(lz4, LZ4F_createDecompressionContext, have_lz4f=yes, have_lz4f=no)
         ], [have_zstd=no])
 
-AS_IF([test "x$have_lz4" = "xyes"], [
+AS_IF([test "x$have_lz4f" = "xyes"], [
         if test "$ac_cv_lib_lz4_code" != "none required"; then
                 LIBWANDIO_LIBS="$LIBWANDIO_LIBS -llz4"
         fi
-        AC_DEFINE(HAVE_LIBLZ4, 1, "Compiled with lz4 support")
+        AC_DEFINE(HAVE_LIBLZ4F, 1, "Compiled with lz4 frame support")
         AC_CHECK_LIB(lz4, LZ4F_getVersion, have_lz4_173=yes, have_lz4_173=no)
         if test "x$have_lz4_173" = "xyes"; then
                 AC_DEFINE(HAVE_LIBLZ4_MOVABLE, 1, "If defined then liblz4 does NOT have the ERROR_srcPtr_wrong bug")
         fi
-        with_lz4=yes],
-
-
-        [AS_IF([test "x$with_lz4" = "xyes"],
-                [AC_MSG_ERROR([lz4 requested but not found])])
-        AC_DEFINE(HAVE_LIBLZ4, 0, "Compiled with lz4 support")
-        with_lz4=no]
+        with_lz4=frameapi],
+        [
+            AC_DEFINE(HAVE_LIBLZ4F, 0, "Compiled with lz4 frame support")
+            AC_CHECK_LIB(lz4, LZ4_decompress_safe_continue, have_lz4s=yes, have_lz4s=no)
+            AS_IF([test "x$have_lz4s" = "xyes"], [
+                if test "$ac_cv_lib_lz4_code" != "none required"; then
+                    LIBWANDIO_LIBS="$LIBWANDIO_LIBS -llz4"
+                fi
+                AC_DEFINE(HAVE_LIBLZ4S, 1, "Compiled with lz4 stream support")
+                with_lz4=streamapi
+            ], [
+                AS_IF([test "x$with_lz4" = "xyes"], [
+                    AC_MSG_ERROR([lz4 requested but not found])],
+                    [
+                     AC_DEFINE(HAVE_LIBLZ4S, 0, "Compiled with lz4 stream support")
+                     with_lz4=no])
+                ])
+        ]
 )
 
 AC_ARG_WITH([http],
@@ -340,6 +351,19 @@ reportopt() {
 	fi
 }
 
+reportlz4opt() {
+        if test x"$2" = xframeapi; then
+                AC_MSG_NOTICE([$1: Frame API])
+        else
+            if test x"$2" = xstreamapi; then
+                AC_MSG_NOTICE([$1: Stream API only])
+            else
+                AC_MSG_NOTICE([$1: No])
+            fi
+        fi
+}
+
+
 
 # Report which configure options were set
 echo
@@ -349,6 +373,6 @@ reportopt "Compiled with compressed file (bz2) support" $with_bzip2
 reportopt "Compiled with compressed file (lzo write only) support" $with_lzo
 reportopt "Compiled with compressed file (lzma) support" $with_lzma
 reportopt "Compiled with compressed file (zstd) support" $with_zstd
-reportopt "Compiled with compressed file (lz4) support" $with_lz4
+reportlz4opt "Compiled with compressed file (lz4) support" $with_lz4
 reportopt "Compiled with Intel QuickAssist Technology support" $with_qatzip
 reportopt "Compiled with http read (libcurl) support" $with_http

@@ -40,9 +40,10 @@ enum err_t { ERR_OK = 1, ERR_EOF = 0, ERR_ERROR = -1 };
 struct lz4w_t {
         iow_t *child;
         enum err_t err;
+#if HAVE_LIBLZ4F
         LZ4F_compressionContext_t cctx;
         LZ4F_preferences_t *prefsPtr;
-
+#endif
         char outbuf[1024 * 1024 * 2];
         int outbuf_size_max;
         int outbuf_index;
@@ -66,6 +67,9 @@ iow_t *lz4_wopen(iow_t *child, int compress_level) {
         DATA(iow)->child = child;
         DATA(iow)->err = ERR_OK;
         DATA(iow)->outbuf_size_max = sizeof(DATA(iow)->outbuf) / 2;
+        DATA(iow)->outbuf_index = 0;
+
+#if HAVE_LIBLZ4F
         DATA(iow)->prefsPtr = malloc(sizeof(LZ4F_preferences_t));
         DATA(iow)->prefsPtr->compressionLevel = compress_level;
         LZ4F_errorCode_t result =
@@ -92,6 +96,7 @@ iow_t *lz4_wopen(iow_t *child, int compress_level) {
                 return NULL;
         }
         DATA(iow)->outbuf_index = result;
+#endif
         return iow;
 }
 
@@ -118,8 +123,12 @@ static int64_t lz4_wwrite(iow_t *iow, const char *buffer, int64_t len) {
                 } else {
                         inbuf_len = len - inbuf_index;
                 }
-                size_t upper_bound =
+
+                size_t upper_bound = 0, result = 0;
+#if HAVE_LIBLZ4F
+                upper_bound =
                     LZ4F_compressBound(inbuf_len, DATA(iow)->prefsPtr);
+#endif
                 if ((size_t)upper_bound >
                     sizeof(DATA(iow)->outbuf) - DATA(iow)->outbuf_index) {
                         int bytes_written =
@@ -133,7 +142,8 @@ static int64_t lz4_wwrite(iow_t *iow, const char *buffer, int64_t len) {
                         DATA(iow)->outbuf_index = 0;
                 }
                 assert(upper_bound <= (int64_t)sizeof(DATA(iow)->outbuf));
-                size_t result = LZ4F_compressUpdate(
+#if HAVE_LIBLZ4F
+                result = LZ4F_compressUpdate(
                     DATA(iow)->cctx,
                     DATA(iow)->outbuf + DATA(iow)->outbuf_index,
                     sizeof(DATA(iow)->outbuf) - DATA(iow)->outbuf_index,
@@ -144,6 +154,7 @@ static int64_t lz4_wwrite(iow_t *iow, const char *buffer, int64_t len) {
                         errno = EIO;
                         return -1;
                 }
+#endif
                 DATA(iow)->outbuf_index += result;
                 inbuf_index += inbuf_len;
                 if (inbuf_index >= len) {
@@ -153,6 +164,7 @@ static int64_t lz4_wwrite(iow_t *iow, const char *buffer, int64_t len) {
 }
 
 static int lz4_wflush(iow_t *iow) {
+        size_t result = 0;
         int64_t bytes_written = wandio_wwrite(
             DATA(iow)->child, DATA(iow)->outbuf, DATA(iow)->outbuf_index);
         if (bytes_written < 0) {
@@ -162,7 +174,8 @@ static int lz4_wflush(iow_t *iow) {
         }
         assert(bytes_written == DATA(iow)->outbuf_index);
         DATA(iow)->outbuf_index = 0;
-        size_t result = LZ4F_flush(DATA(iow)->cctx, DATA(iow)->outbuf,
+#if HAVE_LIBLZ4F
+        result = LZ4F_flush(DATA(iow)->cctx, DATA(iow)->outbuf,
                                    sizeof(DATA(iow)->outbuf), NULL);
         if (LZ4F_isError(result)) {
                 fprintf(stderr, "lz4 compress flush error %ld %s\n", result,
@@ -170,6 +183,7 @@ static int lz4_wflush(iow_t *iow) {
                 errno = EIO;
                 return -1;
         }
+#endif
         if (result > 0) {
                 bytes_written =
                     wandio_wwrite(DATA(iow)->child, DATA(iow)->outbuf, result);
@@ -190,14 +204,18 @@ static int lz4_wflush(iow_t *iow) {
 }
 
 static void lz4_wclose(iow_t *iow) {
+        size_t result = 0;
         lz4_wflush(iow);
-        size_t result = LZ4F_compressEnd(DATA(iow)->cctx, DATA(iow)->outbuf,
+
+#if HAVE_LIBLZ4F
+        result = LZ4F_compressEnd(DATA(iow)->cctx, DATA(iow)->outbuf,
                                          sizeof(DATA(iow)->outbuf), NULL);
         if (LZ4F_isError(result)) {
                 fprintf(stderr, "lz4 compress close error %ld %s\n", result,
                         LZ4F_getErrorName(result));
                 errno = EIO;
         }
+#endif
         int64_t bytes_written =
             wandio_wwrite(DATA(iow)->child, DATA(iow)->outbuf, result);
         if (bytes_written <= 0) {
@@ -205,8 +223,10 @@ static void lz4_wclose(iow_t *iow) {
                 errno = EIO;
         }
         wandio_wdestroy(DATA(iow)->child);
+#if HAVE_LIBLZ4F
         LZ4F_freeCompressionContext(DATA(iow)->cctx);
         free(DATA(iow)->prefsPtr);
+#endif
         free(iow->data);
         free(iow);
 }
