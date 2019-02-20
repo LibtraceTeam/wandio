@@ -73,10 +73,10 @@ io_t *zstd_lz4_open(io_t *parent) {
         io->source = &zstd_lz4_source;
         io->data = malloc(sizeof(struct zstd_lz4_t));
         memset(io->data, 0, sizeof(struct zstd_lz4_t));
+        DATA(io)->parent = parent;
 #if HAVE_LIBZSTD
         DATA(io)->stream = ZSTD_createDStream();
         ZSTD_initDStream(DATA(io)->stream);
-        DATA(io)->parent = parent;
         DATA(io)->input_buffer.size = 0;
         DATA(io)->input_buffer.src = NULL;
         DATA(io)->input_buffer.pos = 0;

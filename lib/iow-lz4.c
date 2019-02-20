@@ -30,7 +30,9 @@
 #include "config.h"
 #include <assert.h>
 #include <errno.h>
+#if HAVE_LIBLZ4F
 #include <lz4frame.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include "wandio.h"
@@ -204,10 +206,10 @@ static int lz4_wflush(iow_t *iow) {
 }
 
 static void lz4_wclose(iow_t *iow) {
-        size_t result = 0;
         lz4_wflush(iow);
 
 #if HAVE_LIBLZ4F
+        size_t result = 0;
         result = LZ4F_compressEnd(DATA(iow)->cctx, DATA(iow)->outbuf,
                                          sizeof(DATA(iow)->outbuf), NULL);
         if (LZ4F_isError(result)) {
@@ -215,13 +217,13 @@ static void lz4_wclose(iow_t *iow) {
                         LZ4F_getErrorName(result));
                 errno = EIO;
         }
-#endif
         int64_t bytes_written =
             wandio_wwrite(DATA(iow)->child, DATA(iow)->outbuf, result);
         if (bytes_written <= 0) {
                 fprintf(stderr, "lz4 compress close write error\n");
                 errno = EIO;
         }
+#endif
         wandio_wdestroy(DATA(iow)->child);
 #if HAVE_LIBLZ4F
         LZ4F_freeCompressionContext(DATA(iow)->cctx);

@@ -57,6 +57,21 @@ unsigned int max_buffers = 50;
 uint64_t read_waits = 0;
 uint64_t write_waits = 0;
 
+static const char *ctype_name(int compress_type) {
+
+        int i;
+        for (i = 0; ; i++) {
+                if (compression_type[i].compress_type == compress_type) {
+                        return compression_type[i].name;
+                }
+
+                if (compression_type[i].compress_type == WANDIO_COMPRESS_NONE) {
+                        break;
+                }
+        }
+        return "unknown";
+}
+
 /** Parse an option.
  * stats -- Show summary stats
  * directwrite -- bypass the diskcache on write
@@ -252,7 +267,7 @@ static io_t *create_io_reader(const char *filename, int autodetect) {
 
                 if ((len >= 6) && (buffer[0] == 0x04) && (buffer[1] == 0x22) &&
                     (buffer[2] == 0x4d) && (buffer[3] == 0x18)) {
-#if HAVE_LIBLZ4F || HAVE_LIBLZ4S
+#if HAVE_LIBLZ4F
                         DEBUG_PIPELINE("lz4");
                         io = zstd_lz4_open(base);
 #else
@@ -268,7 +283,7 @@ static io_t *create_io_reader(const char *filename, int autodetect) {
                 if ((len >= 6) && ((buffer[0] & 0xf0) == 0x50) &&
                     (buffer[1] == 0x2a) && (buffer[2] == 0x4d) &&
                     (buffer[3] == 0x18)) {
-#if HAVE_LIBLZ4F || HAVE_LIBZSTD || HAVE_LIBLZ4S
+#if HAVE_LIBLZ4F || HAVE_LIBZSTD
                         DEBUG_PIPELINE("lz4 or zstd");
                         io = zstd_lz4_open(base);
 #else
@@ -385,50 +400,53 @@ DLLEXPORT iow_t *wandio_wcreate(const char *filename, int compress_type,
                 return NULL;
         iow = base;
 
-#if HAVE_LIBZ
-        if (compression_level != 0 && compress_type == WANDIO_COMPRESS_ZLIB) {
+        if (compression_level != 0) {
+                if (compress_type == WANDIO_COMPRESS_ZLIB) {
 
 #if HAVE_LIBQATZIP
-                /* Try using libqat. If this fails, fall back to
-                 * standard zlib */
-                iow = qat_wopen(base, compression_level);
+                        /* Try using libqat. If this fails, fall back to
+                         * standard zlib */
+                        iow = qat_wopen(base, compression_level);
 #endif
-                if (iow == NULL || iow == base) {
-                        iow = zlib_wopen(base, compression_level);
+#if HAVE_LIBZ
+                        if (iow == NULL || iow == base) {
+                                iow = zlib_wopen(base, compression_level);
+                        }
+#endif
                 }
-        }
-#endif
 #if HAVE_LIBLZO2
-        else if (compression_level != 0 &&
-                 compress_type == WANDIO_COMPRESS_LZO) {
-                iow = lzo_wopen(base, compression_level);
-        }
+                if (compress_type == WANDIO_COMPRESS_LZO) {
+                        iow = lzo_wopen(base, compression_level);
+                }
 #endif
 #if HAVE_LIBBZ2
-        else if (compression_level != 0 &&
-                 compress_type == WANDIO_COMPRESS_BZ2) {
-                iow = bz_wopen(base, compression_level);
-        }
+                if (compress_type == WANDIO_COMPRESS_BZ2) {
+                        iow = bz_wopen(base, compression_level);
+                }
 #endif
 #if HAVE_LIBLZMA
-        else if (compression_level != 0 &&
-                 compress_type == WANDIO_COMPRESS_LZMA) {
-                iow = lzma_wopen(base, compression_level);
-        }
+                if (compress_type == WANDIO_COMPRESS_LZMA) {
+                        iow = lzma_wopen(base, compression_level);
+                }
 #endif
 #if HAVE_LIBZSTD
-        else if (compression_level != 0 &&
-                 compress_type == WANDIO_COMPRESS_ZSTD) {
-                iow = zstd_wopen(base, compression_level);
-        }
+                if (compress_type == WANDIO_COMPRESS_ZSTD) {
+                        iow = zstd_wopen(base, compression_level);
+                }
 #endif
-#if HAVE_LIBLZ4F || HAVE_LIBLZ4S
-        else if (compress_type == WANDIO_COMPRESS_LZ4) {
-                iow = lz4_wopen(base, compression_level);
-        }
+#if HAVE_LIBLZ4F
+                if (compress_type == WANDIO_COMPRESS_LZ4) {
+                        iow = lz4_wopen(base, compression_level);
+                }
 #endif
+        }
+        if (compress_type != WANDIO_COMPRESS_NONE && iow == base) {
+                fprintf(stderr, "warning: %s compression requested but libwandio has not been built \nwith support for that method, falling back to stdio\n",
+                                ctype_name(compress_type));
+        }
+
         /* Open a threaded writer */
-        if (use_threads) {
+        if (iow && use_threads) {
                 return thread_wopen(iow);
         } else {
                 return iow;
