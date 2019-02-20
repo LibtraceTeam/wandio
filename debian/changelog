@@ -1,7 +1,11 @@
-libwandio1 (4.0.1-1) unstable; urgency=medium
+libwandio1 (4.1.0-1) unstable; urgency=medium
 
   * Added support for reading and writing lz4
   * Added support for using QuickAssist to do gzip (de)compression
+  * Added new functionality for interacting with wandio files
+    (wandio_fgets(), wandio_vprintf(), wandio_printf())
+  * Added API function for determining correct compression method
+    based on output filename extension
 
  -- Shane Alcock <salcock@waikato.ac.nz>  Wed, 13 Feb 2019 15:11:15 +1300
 
