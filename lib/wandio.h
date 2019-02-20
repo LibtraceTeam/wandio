@@ -376,7 +376,7 @@ typedef int64_t(read_cb_t)(void *file, void *buffer, int64_t len);
  * @param chomp         Should the newline be removed
  * @return the number of bytes actually read
  */
-int64_t generic_fgets(void *file, void *buffer, off_t len, int chomp,
+int64_t wandio_generic_fgets(void *file, void *buffer, off_t len, int chomp,
                       read_cb_t *read_cb);
 
 /** Read a line from the given wandio file pointer

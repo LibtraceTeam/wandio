@@ -487,8 +487,8 @@ DLLEXPORT void wandio_wdestroy(iow_t *iow) {
 
 /** Alistair's API extensions from "wandio_util" */
 
-DLLEXPORT int64_t generic_fgets(void *file, void *buffer, off_t len, int chomp,
-                                read_cb_t *read_cb) {
+DLLEXPORT int64_t wandio_generic_fgets(void *file, void *buffer, off_t len,
+                                int chomp, read_cb_t *read_cb) {
         assert(file != NULL);
 
         char cbuf;
