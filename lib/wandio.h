@@ -208,6 +208,8 @@ io_t *peek_open(io_t *parent);
 io_t *qat_open(io_t *parent);
 io_t *stdio_open(const char *filename);
 io_t *http_open(const char *filename);
+io_t *http_open_hdrs(const char *filename, char **hdrs, int hdrs_cnt);
+io_t *swift_open(const char *filename);
 
 iow_t *zlib_wopen(iow_t *child, int compress_level);
 iow_t *bz_wopen(iow_t *child, int compress_level);
