@@ -178,7 +178,7 @@ static int lz4_wflush(iow_t *iow) {
         DATA(iow)->outbuf_index = 0;
 #if HAVE_LIBLZ4F
         result = LZ4F_flush(DATA(iow)->cctx, DATA(iow)->outbuf,
-                                   sizeof(DATA(iow)->outbuf), NULL);
+                            sizeof(DATA(iow)->outbuf), NULL);
         if (LZ4F_isError(result)) {
                 fprintf(stderr, "lz4 compress flush error %ld %s\n", result,
                         LZ4F_getErrorName(result));
@@ -211,7 +211,7 @@ static void lz4_wclose(iow_t *iow) {
 #if HAVE_LIBLZ4F
         size_t result = 0;
         result = LZ4F_compressEnd(DATA(iow)->cctx, DATA(iow)->outbuf,
-                                         sizeof(DATA(iow)->outbuf), NULL);
+                                  sizeof(DATA(iow)->outbuf), NULL);
         if (LZ4F_isError(result)) {
                 fprintf(stderr, "lz4 compress close error %ld %s\n", result,
                         LZ4F_getErrorName(result));

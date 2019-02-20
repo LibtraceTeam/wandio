@@ -125,11 +125,13 @@ static int64_t zstd_lz4_read(io_t *io, void *buffer, int64_t len) {
                                                     became smallish */
 
 #if HAVE_LIBLZ4F_MOVABLE
-/* Older versions of liblz4 get very unhappy if you try to change the source
- * buffer pointers mid-decompress, so we can only perform this memmove
- * if we have liblz4 1.7.3 or later.
- * This affects the liblz4-dev packages for both stretch and bionic :(
- */
+                                /* Older versions of liblz4 get very unhappy if
+                                 * you try to change the source buffer pointers
+                                 * mid-decompress, so we can only perform this
+                                 * memmove if we have liblz4 1.7.3 or later.
+                                 * This affects the liblz4-dev packages for both
+                                 * stretch and bionic :(
+                                 */
                                 memmove(DATA(io)->inbuf,
                                         DATA(io)->inbuf + DATA(io)->inbuf_index,
                                         data_size);
@@ -270,8 +272,8 @@ static int64_t zstd_lz4_read(io_t *io, void *buffer, int64_t len) {
                                 }
 #endif
                         }
-                        if (DATA(io)->inbuf_index == inbuf_index_save
-                                        && outbuf_index == 0) {
+                        if (DATA(io)->inbuf_index == inbuf_index_save &&
+                            outbuf_index == 0) {
                                 fprintf(stderr, "zstd - lz4 decoder has made "
                                                 "no progress, probably stuck?"
                                                 "\n");

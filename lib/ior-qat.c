@@ -70,7 +70,6 @@ static void qat_perror(int errcode) {
         }
 }
 
-
 struct qat_t {
         QzSession_T sess;
         io_t *parent;
@@ -106,8 +105,8 @@ io_t *qat_open(io_t *parent) {
 
         params.huffman_hdr = QZ_DYNAMIC_HDR;
         params.direction = QZ_DIR_DECOMPRESS;
-	params.comp_lvl = 1;
-	params.comp_algorithm = QZ_DEFLATE;
+        params.comp_lvl = 1;
+        params.comp_algorithm = QZ_DEFLATE;
         params.data_fmt = QZ_DATA_FORMAT_DEFAULT;
         params.poll_sleep = QZ_POLL_SLEEP_DEFAULT;
         params.max_forks = QZ_MAX_FORK_DEFAULT;
@@ -128,7 +127,7 @@ io_t *qat_open(io_t *parent) {
         return io;
 }
 
-static inline int64_t  _read_from_parent(io_t *io) {
+static inline int64_t _read_from_parent(io_t *io) {
         int bytes_read;
         int64_t unread;
 
@@ -141,8 +140,7 @@ static inline int64_t  _read_from_parent(io_t *io) {
                 } else if (DATA(io)->insize - DATA(io)->inoffset < 256 * 1024) {
                         /* compact buffer */
                         memmove(DATA(io)->inbuff,
-                                        DATA(io)->inbuff + DATA(io)->indecomp,
-                                        unread);
+                                DATA(io)->inbuff + DATA(io)->indecomp, unread);
                         DATA(io)->inoffset = unread;
                         DATA(io)->indecomp = 0;
                 }
@@ -150,8 +148,8 @@ static inline int64_t  _read_from_parent(io_t *io) {
 
         while (1) {
                 bytes_read = wandio_read(DATA(io)->parent,
-                        DATA(io)->inbuff + DATA(io)->inoffset,
-                        DATA(io)->insize - DATA(io)->inoffset);
+                                         DATA(io)->inbuff + DATA(io)->inoffset,
+                                         DATA(io)->insize - DATA(io)->inoffset);
 
                 if (bytes_read < 0) {
                         DATA(io)->err = ERR_ERROR;
@@ -159,14 +157,13 @@ static inline int64_t  _read_from_parent(io_t *io) {
                 }
 
                 if (bytes_read == 0 &&
-                                DATA(io)->inoffset == DATA(io)->indecomp) {
+                    DATA(io)->inoffset == DATA(io)->indecomp) {
                         DATA(io)->err = ERR_EOF;
                         return 0;
                 }
 
                 DATA(io)->inoffset += bytes_read;
-                if (bytes_read == 0 || DATA(io)->inoffset >=
-                                DATA(io)->insize) {
+                if (bytes_read == 0 || DATA(io)->inoffset >= DATA(io)->insize) {
                         break;
                 }
         }
@@ -190,23 +187,23 @@ static int64_t qat_read(io_t *io, void *buffer, int64_t len) {
 
                 rc = _read_from_parent(io);
                 if (rc <= 0) {
-			if (readsofar > 0) {
-				break;
-			}
+                        if (readsofar > 0) {
+                                break;
+                        }
                         return rc;
                 }
 
                 src_len = (unsigned int)DATA(io)->inoffset - DATA(io)->indecomp;
-                dst_len = (unsigned int) len;
+                dst_len = (unsigned int)len;
                 rc = qzDecompress(&(DATA(io)->sess),
-                                DATA(io)->inbuff + DATA(io)->indecomp,
-                                &src_len, buffer + readsofar, &dst_len);
+                                  DATA(io)->inbuff + DATA(io)->indecomp,
+                                  &src_len, buffer + readsofar, &dst_len);
 
                 if (rc != QZ_OK && rc != QZ_BUF_ERROR && rc != QZ_DATA_ERROR) {
                         DATA(io)->err = ERR_ERROR;
                         qat_perror(rc);
                         return -1;
-		} else {
+                } else {
                         DATA(io)->err = ERR_OK;
                 }
 
@@ -225,9 +222,7 @@ static void qat_close(io_t *io) {
         free(io);
 }
 
-io_source_t qat_source = {"qatr",
-                          qat_read,
-                          NULL,                     /* peek */
+io_source_t qat_source = {"qatr",   qat_read, NULL, /* peek */
                           NULL,                     /* tell */
                           NULL,                     /* seek */
                           qat_close};

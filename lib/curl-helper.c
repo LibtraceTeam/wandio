@@ -28,8 +28,8 @@
 
 #include "curl-helper.h"
 #include <assert.h>
-#include <pthread.h>
 #include <curl/curl.h>
+#include <pthread.h>
 
 /* we lock calls to curl_global_init because it does non-thread-safe things, but
    this is still a little sketchy because apparently it calls a bunch of
@@ -39,8 +39,7 @@
 static pthread_mutex_t cg_lock = PTHREAD_MUTEX_INITIALIZER;
 static int cg_init_cnt = 0;
 
-void curl_helper_safe_global_init(void)
-{
+void curl_helper_safe_global_init(void) {
         /* set up global curl structures (see note above) */
         pthread_mutex_lock(&cg_lock);
         if (!cg_init_cnt) {
@@ -50,8 +49,7 @@ void curl_helper_safe_global_init(void)
         pthread_mutex_unlock(&cg_lock);
 }
 
-void curl_helper_safe_global_cleanup(void)
-{
+void curl_helper_safe_global_cleanup(void) {
         /* clean up global curl structures (see note above) */
         pthread_mutex_lock(&cg_lock);
         assert(cg_init_cnt);

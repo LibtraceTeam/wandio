@@ -32,10 +32,10 @@
  */
 
 #include "config.h"
-#include "wandio.h"
-#include "swift-support/keystone.h"
 #include <stdlib.h>
 #include <string.h>
+#include "swift-support/keystone.h"
+#include "wandio.h"
 
 /* Libwandio IO module implementing an OpenStack Swift reader */
 
@@ -71,13 +71,13 @@ static int64_t swift_tell(io_t *io);
 static int64_t swift_seek(io_t *io, int64_t offset, int whence);
 static void swift_close(io_t *io);
 
-static int parse_swifturl(const char *swifturl, char **container, char **object)
-{
+static int parse_swifturl(const char *swifturl, char **container,
+                          char **object) {
         const char *ctmp;
         const char *otmp;
         size_t clen, olen;
         // parse string like swift://CONTAINER/OBJECT
-        if (!swifturl || strlen(swifturl) < SWIFT_PFX_LEN+1 ||
+        if (!swifturl || strlen(swifturl) < SWIFT_PFX_LEN + 1 ||
             strncmp(swifturl, SWIFT_PFX, SWIFT_PFX_LEN) != 0) {
                 // malformed URL
                 return -1;
@@ -89,9 +89,9 @@ static int parse_swifturl(const char *swifturl, char **container, char **object)
                 // malformed URL (no object?)
                 return -1;
         }
-        otmp++; // skip over the slash
+        otmp++;  // skip over the slash
         // now we know how long things are, so allocate some memory
-        clen = otmp-ctmp-1;
+        clen = otmp - ctmp - 1;
         olen = strlen(otmp);
         if ((*container = malloc(clen + 1)) == NULL) {
                 return -1;
@@ -111,12 +111,11 @@ static int parse_swifturl(const char *swifturl, char **container, char **object)
         return 0;
 }
 
-static char *build_auth_token_hdr(char *token)
-{
+static char *build_auth_token_hdr(char *token) {
         char *hdr;
 
-        if ((hdr = malloc(strlen(SWIFT_AUTH_TOKEN_HDR) +
-                          strlen(token) + 1)) == NULL) {
+        if ((hdr = malloc(strlen(SWIFT_AUTH_TOKEN_HDR) + strlen(token) + 1)) ==
+            NULL) {
                 return NULL;
         }
 
@@ -126,14 +125,13 @@ static char *build_auth_token_hdr(char *token)
         return hdr;
 }
 
-static char *build_http_url(struct swift_t *s)
-{
+static char *build_http_url(struct swift_t *s) {
         // STORAGE_URL/CONTAINER/OBJECT
         char *url;
 
         if ((url = malloc(strlen(s->token.storage_url) + 1 +
-                          strlen(s->container) + 1 +
-                          strlen(s->object) + 1)) == NULL) {
+                          strlen(s->container) + 1 + strlen(s->object) + 1)) ==
+            NULL) {
                 return NULL;
         }
 
@@ -146,8 +144,7 @@ static char *build_http_url(struct swift_t *s)
         return url;
 }
 
-static int get_token(struct swift_t *s)
-{
+static int get_token(struct swift_t *s) {
         // first see if the token is explicitly loaded into the env
         if (keystone_env_parse_token(&s->token) == 1) {
                 // then let's use it
@@ -178,14 +175,14 @@ static int get_token(struct swift_t *s)
         return 0;
 }
 
-io_t *swift_open(const char *filename)
-{
-	io_t *io = malloc(sizeof(io_t));
+io_t *swift_open(const char *filename) {
+        io_t *io = malloc(sizeof(io_t));
         char *auth_hdr = NULL;
         char *http_url = NULL;
 
-        if (!io) return NULL;
-	io->data = malloc(sizeof(struct swift_t));
+        if (!io)
+                return NULL;
+        io->data = malloc(sizeof(struct swift_t));
         if (!io->data) {
                 free(io);
                 return NULL;
@@ -195,8 +192,8 @@ io_t *swift_open(const char *filename)
         io->source = &swift_source;
 
         // parse the filename in to container and object
-        if (parse_swifturl(filename, &DATA(io)->container,
-                           &DATA(io)->object) != 0) {
+        if (parse_swifturl(filename, &DATA(io)->container, &DATA(io)->object) !=
+            0) {
                 swift_close(io);
                 return NULL;
         }
@@ -221,40 +218,39 @@ io_t *swift_open(const char *filename)
         }
 
         // open the child reader!
-        if ((DATA(io)->http_reader =
-             http_open_hdrs(http_url, &auth_hdr, 1)) == NULL) {
+        if ((DATA(io)->http_reader = http_open_hdrs(http_url, &auth_hdr, 1)) ==
+            NULL) {
                 goto err;
         }
 
-	return io;
+        return io;
 
- err:
+err:
         free(auth_hdr);
         free(http_url);
         swift_close(io);
         return NULL;
 }
 
-static int64_t swift_read(io_t *io, void *buffer, int64_t len)
-{
-        if (!DATA(io)->http_reader) return 0; // end-of-file?
+static int64_t swift_read(io_t *io, void *buffer, int64_t len) {
+        if (!DATA(io)->http_reader)
+                return 0;  // end-of-file?
         return wandio_read(DATA(io)->http_reader, buffer, len);
 }
 
-static int64_t swift_tell(io_t *io)
-{
-        if (!DATA(io)->http_reader) return -1;
+static int64_t swift_tell(io_t *io) {
+        if (!DATA(io)->http_reader)
+                return -1;
         return wandio_tell(DATA(io)->http_reader);
 }
 
-static int64_t swift_seek(io_t *io, int64_t offset, int whence)
-{
-        if (!DATA(io)->http_reader) return -1;
+static int64_t swift_seek(io_t *io, int64_t offset, int whence) {
+        if (!DATA(io)->http_reader)
+                return -1;
         return wandio_seek(DATA(io)->http_reader, offset, whence);
 }
 
-static void swift_close(io_t *io)
-{
+static void swift_close(io_t *io) {
         free(DATA(io)->container);
         free(DATA(io)->object);
         keystone_auth_creds_destroy(&DATA(io)->creds);
@@ -264,15 +260,9 @@ static void swift_close(io_t *io)
                 wandio_destroy(DATA(io)->http_reader);
         }
 
-	free(io->data);
-	free(io);
+        free(io->data);
+        free(io);
 }
 
-io_source_t swift_source = {
-	"swift",
-	swift_read,
-	NULL,
-	swift_tell,
-        swift_seek,
-	swift_close
-};
+io_source_t swift_source = {"swift",    swift_read, NULL,
+                            swift_tell, swift_seek, swift_close};

@@ -66,39 +66,34 @@ static int safe_open(const char *filename, int flags) {
                   0666);
 #endif
         /* If that failed (or we don't support O_DIRECT) try opening without */
-	if (fd == -1) {
-		fd = open(filename,
-			flags
-			|O_WRONLY
-			|O_CREAT
-			|O_TRUNC,
-			0666);
-	}
+        if (fd == -1) {
+                fd = open(filename, flags | O_WRONLY | O_CREAT | O_TRUNC, 0666);
+        }
 
-	if (fd == -1)
-		return fd;
+        if (fd == -1)
+                return fd;
 
-	/* If we're running via sudo, we want to write files owned by the
-	 * original user rather than root.
-	 *
-	 * TODO: make this some sort of config option */
-	if (getuid() == 0) {
-		sudoenv = getenv("SUDO_UID");
-		if (sudoenv != NULL) {
-			userid = strtol(sudoenv, NULL, 10);
-		}
-		sudoenv = getenv("SUDO_GID");
-		if (sudoenv != NULL) {
-			groupid = strtol(sudoenv, NULL, 10);
-		}
+        /* If we're running via sudo, we want to write files owned by the
+         * original user rather than root.
+         *
+         * TODO: make this some sort of config option */
+        if (getuid() == 0) {
+                sudoenv = getenv("SUDO_UID");
+                if (sudoenv != NULL) {
+                        userid = strtol(sudoenv, NULL, 10);
+                }
+                sudoenv = getenv("SUDO_GID");
+                if (sudoenv != NULL) {
+                        groupid = strtol(sudoenv, NULL, 10);
+                }
 
-		if (userid != 0 && fchown(fd, userid, groupid) == -1) {
-			perror("fchown");
-			return -1;
-		}
-	}
+                if (userid != 0 && fchown(fd, userid, groupid) == -1) {
+                        perror("fchown");
+                        return -1;
+                }
+        }
 
-	return fd;
+        return fd;
 }
 
 iow_t *stdio_wopen(const char *filename, int flags) {

@@ -40,12 +40,11 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "wandio.h"
 #include "curl-helper.h"
+#include "wandio.h"
 
 /* Libwandio IO module implementing an HTTP reader (using libcurl)
  */
-
 
 #define FILL_FINISHED 0
 #define FILL_RETRY -1
@@ -111,8 +110,7 @@ static size_t write_cb(char *ptr, size_t size, size_t nmemb, void *data) {
         return nbytes;
 }
 
-static int process_hdrs(io_t *io, char **hdrs, int hdrs_cnt)
-{
+static int process_hdrs(io_t *io, char **hdrs, int hdrs_cnt) {
         struct curl_slist *c_hdrs = NULL;
         int i;
 
@@ -131,8 +129,7 @@ static int process_hdrs(io_t *io, char **hdrs, int hdrs_cnt)
         return 0;
 }
 
-static int prepare(io_t *io)
-{
+static int prepare(io_t *io) {
         int rc;
         rc = curl_multi_remove_handle(DATA(io)->multi, DATA(io)->curl);
         rc = curl_easy_setopt(DATA(io)->curl, CURLOPT_RESUME_FROM,
@@ -222,11 +219,11 @@ static int fill_buffer(io_t *io) {
         return DATA(io)->l_buf;
 }
 
-io_t *http_open_hdrs(const char *filename, char **hdrs, int hdrs_cnt)
-{
-  	io_t *io = malloc(sizeof(io_t));
-        if (!io) return NULL;
-	io->data = calloc(sizeof(struct http_t), 1);
+io_t *http_open_hdrs(const char *filename, char **hdrs, int hdrs_cnt) {
+        io_t *io = malloc(sizeof(io_t));
+        if (!io)
+                return NULL;
+        io->data = calloc(sizeof(struct http_t), 1);
         if (!io->data) {
                 free(io);
                 return NULL;
@@ -239,9 +236,9 @@ io_t *http_open_hdrs(const char *filename, char **hdrs, int hdrs_cnt)
                 return NULL;
         }
 
-	if (hdrs && process_hdrs(io, hdrs, hdrs_cnt) != 0) {
-	  http_close(io);
-	  return NULL;
+        if (hdrs && process_hdrs(io, hdrs, hdrs_cnt) != 0) {
+                http_close(io);
+                return NULL;
         }
 
         if (prepare(io) < 0 || fill_buffer(io) < 0) {
@@ -252,8 +249,7 @@ io_t *http_open_hdrs(const char *filename, char **hdrs, int hdrs_cnt)
         return io;
 }
 
-io_t *http_open(const char *filename)
-{
+io_t *http_open(const char *filename) {
         return http_open_hdrs(filename, NULL, 0);
 }
 

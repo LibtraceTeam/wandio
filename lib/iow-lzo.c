@@ -349,7 +349,8 @@ iow_t *lzo_wopen(iow_t *child, int compress_level) {
                 DATA(iow)->next_thread = 0;
                 for (i = 0; i < DATA(iow)->threads; ++i) {
                         pthread_cond_init(&DATA(iow)->thread[i].in_ready, NULL);
-                        pthread_cond_init(&DATA(iow)->thread[i].out_ready, NULL);
+                        pthread_cond_init(&DATA(iow)->thread[i].out_ready,
+                                          NULL);
                         pthread_mutex_init(&DATA(iow)->thread[i].mutex, NULL);
                         DATA(iow)->thread[i].closing = false;
                         DATA(iow)->thread[i].num = i;
