@@ -282,12 +282,11 @@ AS_IF([test "x$have_lz4f" = "xyes"], [
                 AC_DEFINE(HAVE_LIBLZ4S, 1, "Compiled with lz4 stream support")
                 with_lz4=streamapi
             ], [
-                AS_IF([test "x$with_lz4" = "xyes"], [
-                    AC_MSG_ERROR([lz4 requested but not found])],
-                    [
-                     AC_DEFINE(HAVE_LIBLZ4S, 0, "Compiled with lz4 stream support")
-                     with_lz4=no])
-                ])
+                AC_DEFINE(HAVE_LIBLZ4S, 0, "Compiled with lz4 stream support")
+                with_lz4=no])
+
+            AS_IF([test "x$with_lz4" = "xyes"], [
+                    AC_MSG_ERROR([lz4 requested but frame API was not found])])
         ]
 )
 
@@ -353,10 +352,10 @@ reportopt() {
 
 reportlz4opt() {
         if test x"$2" = xframeapi; then
-                AC_MSG_NOTICE([$1: Frame API])
+                AC_MSG_NOTICE([$1: Yes])
         else
             if test x"$2" = xstreamapi; then
-                AC_MSG_NOTICE([$1: Stream API only])
+                AC_MSG_NOTICE([$1: No, API is too old])
             else
                 AC_MSG_NOTICE([$1: No])
             fi
