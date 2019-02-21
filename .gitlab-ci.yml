@@ -169,6 +169,38 @@ run-unit-tests-debian-jessie:
   only:
     - tags
 
+run-unit-tests-fedora-29:
+  stage: test
+  image: fedora:29
+  script:
+    - ./run-tests-rpm.sh fedora_29
+  only:
+    - tags
+
+run-unit-tests-fedora-28:
+  stage: test
+  image: fedora:28
+  script:
+    - ./run-tests-rpm.sh fedora_28
+  only:
+    - tags
+
+run-unit-tests-centos-6:
+  stage: test
+  image: centos:6
+  script:
+    - ./run-tests-rpm.sh centos_6
+  only:
+    - tags
+
+run-unit-tests-centos-7:
+  stage: test
+  image: centos:7
+  script:
+    - ./run-tests-rpm.sh centos_7
+  only:
+    - tags
+
 upload-packages:
   stage: upload
   image: ubuntu:bionic
