@@ -21,6 +21,14 @@ apt-get install -y zstd lzop xz-utils liblz4-tool
 
 mk-build-deps --install --remove --tool "apt-get -o Debug::pkgProblemResolver=yes -y --no-install-recommends"
 
-./bootstrap.sh && ./configure && make
+deb=`find built-packages/amd64/$1/libwandio1-dev* -maxdepth 1 -type f`
+pkg_filename=$(basename "${deb}")
+IFS=_ read pkg_name pkg_version pkg_arch <<< $(basename -s ".deb" "${pkg_filename}")
+
+dpkg -i built-packages/amd64/$1/libwandio1_${pkg_version}_${pkg_arch}.deb
+dpkg -i built-packages/amd64/$1/libwandio1-dev_${pkg_version}_${pkg_arch}.deb
+dpkg -i built-packages/amd64/$1/wandio1-tools_${pkg_version}_${pkg_arch}.deb
+
+#./bootstrap.sh && ./configure && make
 cd test && ./do-basic-tests.sh
 
