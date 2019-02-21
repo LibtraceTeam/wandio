@@ -16,10 +16,10 @@ chmod 644 /etc/apt/trusted.gpg.d/wand.gpg
 
 apt-get update
 
-apt-get install -y libbz2-dev liblzma-dev liblzo2-dev libcurl4-openssl-dev \
-        liblz4-dev libncurses5-dev libzstd-dev zlib1g-dev build-essential \
-        autoconf automake libtool
+apt-get install -y devscripts equivs
 apt-get install -y zstd lzop xz-utils liblz4-tool
+
+mk-build-deps --install --remove --tool "apt-get -o Debug::pkgProblemResolver=yes -y --no-install-recommends"
 
 ./bootstrap.sh && ./configure && make
 cd test && ./do-basic-tests.sh
