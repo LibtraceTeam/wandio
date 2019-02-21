@@ -73,6 +73,62 @@ build-amd64-ubuntu-cosmic:
   only:
     - tags
 
+build-amd64-fedora-29:
+  stage: build
+  image: fedora:29
+  script:
+    - ./gitlab-build-rpm.sh fedora29
+    - mkdir -p built-packages/amd64/fedora_29/
+    - mv ~/rpmbuild/RPMS/x86_64/*.rpm built-packages/amd64/fedora_29/
+  artifacts:
+    paths:
+      - built-packages/*
+    expire_in: 1 day
+  only:
+    - tags
+
+build-amd64-fedora-28:
+  stage: build
+  image: fedora:28
+  script:
+    - ./gitlab-build-rpm.sh fedora28
+    - mkdir -p built-packages/amd64/fedora_28/
+    - mv ~/rpmbuild/RPMS/x86_64/*.rpm built-packages/amd64/fedora_28/
+  artifacts:
+    paths:
+      - built-packages/*
+    expire_in: 1 day
+  only:
+    - tags
+
+build-amd64-centos7:
+  stage: build
+  image: centos:7
+  script:
+    - ./gitlab-build-rpm.sh centos7
+    - mkdir -p built-packages/amd64/centos_7/
+    - mv ~/rpmbuild/RPMS/x86_64/*.rpm built-packages/amd64/centos_7/
+  artifacts:
+    paths:
+      - built-packages/*
+    expire_in: 1 day
+  only:
+    - tags
+
+build-amd64-centos6:
+  stage: build
+  image: centos:6
+  script:
+    - ./gitlab-build-rpm.sh centos6
+    - mkdir -p built-packages/amd64/centos_6/
+    - mv ~/rpmbuild/RPMS/x86_64/*.rpm built-packages/amd64/centos_6/
+  artifacts:
+    paths:
+      - built-packages/*
+    expire_in: 1 day
+  only:
+    - tags
+
 run-unit-tests-ubuntu-xenial:
   stage: test
   image: ubuntu:xenial
