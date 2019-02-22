@@ -20,8 +20,14 @@ for path in `find built-packages/amd64/ -maxdepth 1 -type d`; do
         if [ "$ext" = "rpm" ]; then
 
             rev_filename=`echo ${pkg_filename} | rev`
-            pkg_name=`echo ${rev_filename} | cut -d '-' -f4- | rev`
-            pkg_version=`echo ${rev_filename} | cut -d '-' -f1-3 | rev | cut -d '.' -f1-3`
+
+            if [[ "$1" =~ centos_* ]]; then
+                pkg_name=`echo ${rev_filename} | cut -d '-' -f4- | rev`
+                pkg_version=`echo ${rev_filename} | cut -d '-' -f1-3 | rev | cut -d '.' -f1-3`
+            else
+                pkg_name=`echo ${rev_filename} | cut -d '-' -f3- | rev`
+                pkg_version=`echo ${rev_filename} | cut -d '-' -f1-2 | rev | cut -d '.' -f1-3`
+            fi
 
             curl -T "${deb}" -u${BINTRAY_USERNAME}:${BINTRAY_API_KEY} \
                 "https://api.bintray.com/content/wand/general-rpm/${pkg_name}/${pkg_version}/${pkg_filename}"
