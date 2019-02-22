@@ -23,7 +23,7 @@ for path in `find built-packages/amd64/ -maxdepth 1 -type d`; do
             pkg_name=`echo ${rev_filename} | cut -d '-' -f4- | rev`
             pkg_version=`echo ${rev_filename} | cut -d '-' -f1-3 | rev | cut -d '.' -f1-3`
 
-            curl -T "${uprpm}" -u ${BINTRAY_USERNAME}:${BINTRAY_API_KEY} \
+            curl -T "${deb}" -u ${BINTRAY_USERNAME}:${BINTRAY_API_KEY} \
                 "https://api.bintray.com/content/wand/general-rpm/${pkg_name}/${pkg_version}/${pkg_filename}"
         fi
     done
