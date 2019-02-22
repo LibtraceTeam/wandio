@@ -13,9 +13,15 @@ if [ "$1" = "centos6" ]; then
         yum install -y epel-rpm-macros
 fi
 
-yum install -y rpm-build yum-utils rpmdevtools
-yum groupinstall -y 'Development Tools'
-yum-builddep -y rpm/libwandio1.spec
+if [[ "$1" =~ fedora* ]]; then
+        dnf install -y rpm-build rpmdevtools
+        dnf group install -y "C Development Tools and Libraries"
+        dnf builddep -y rpm/libwandio1.spec
+else
+        yum install -y rpm-build yum-utils rpmdevtools which
+        yum groupinstall -y 'Development Tools'
+        yum-builddep -y rpm/libwandio1.spec
+fi
 
 rpmdev-setuptree
 
