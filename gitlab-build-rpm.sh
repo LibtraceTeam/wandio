@@ -13,10 +13,9 @@ if [ "$1" = "centos6" ]; then
         yum install -y epel-rpm-macros
 fi
 
-yum install -y bzip2-devel coreutils diffutils gcc gcc-c++ git libcurl-devel \
-    libzstd-devel lz4-devel lzo-devel make passwd patch python \
-    rpm-build rpm-devel rpmlint rpmdevtools tar vim xz-devel zlib-devel \
-    automake libtool autoconf
+yum install -y rpm-build yum-utils rpmdevtools
+yum groupinstall -y 'Development Tools'
+yum-builddep -y rpm/libwandio1.spec
 
 rpmdev-setuptree
 
