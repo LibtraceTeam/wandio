@@ -1,5 +1,6 @@
 stages:
   - build
+  - test
   - upload
 
 build-amd64-debian-jessie:
@@ -69,6 +70,134 @@ build-amd64-ubuntu-cosmic:
     paths:
       - built-packages/*
     expire_in: 1 day
+  only:
+    - tags
+
+build-amd64-fedora-29:
+  stage: build
+  image: fedora:29
+  script:
+    - ./gitlab-build-rpm.sh fedora29
+    - mkdir -p built-packages/amd64/fedora_29/
+    - mv ~/rpmbuild/RPMS/x86_64/*.rpm built-packages/amd64/fedora_29/
+  artifacts:
+    paths:
+      - built-packages/*
+    expire_in: 1 day
+  only:
+    - tags
+
+build-amd64-fedora-28:
+  stage: build
+  image: fedora:28
+  script:
+    - ./gitlab-build-rpm.sh fedora28
+    - mkdir -p built-packages/amd64/fedora_28/
+    - mv ~/rpmbuild/RPMS/x86_64/*.rpm built-packages/amd64/fedora_28/
+  artifacts:
+    paths:
+      - built-packages/*
+    expire_in: 1 day
+  only:
+    - tags
+
+build-amd64-centos7:
+  stage: build
+  image: centos:7
+  script:
+    - ./gitlab-build-rpm.sh centos7
+    - mkdir -p built-packages/amd64/centos_7/
+    - mv ~/rpmbuild/RPMS/x86_64/*.rpm built-packages/amd64/centos_7/
+  artifacts:
+    paths:
+      - built-packages/*
+    expire_in: 1 day
+  only:
+    - tags
+
+build-amd64-centos6:
+  stage: build
+  image: centos:6
+  script:
+    - ./gitlab-build-rpm.sh centos6
+    - mkdir -p built-packages/amd64/centos_6/
+    - mv ~/rpmbuild/RPMS/x86_64/*.rpm built-packages/amd64/centos_6/
+  artifacts:
+    paths:
+      - built-packages/*
+    expire_in: 1 day
+  only:
+    - tags
+
+run-unit-tests-ubuntu-xenial:
+  stage: test
+  image: ubuntu:xenial
+  script:
+    - ./run-tests.sh ubuntu_xenial
+  only:
+    - tags
+
+run-unit-tests-ubuntu-bionic:
+  stage: test
+  image: ubuntu:bionic
+  script:
+    - ./run-tests.sh ubuntu_bionic
+  only:
+    - tags
+
+run-unit-tests-ubuntu-cosmic:
+  stage: test
+  image: ubuntu:cosmic
+  script:
+    - ./run-tests.sh ubuntu_cosmic
+  only:
+    - tags
+
+run-unit-tests-debian-stretch:
+  stage: test
+  image: debian:stretch
+  script:
+    - ./run-tests.sh debian_stretch
+  only:
+    - tags
+
+run-unit-tests-debian-jessie:
+  stage: test
+  image: debian:jessie
+  script:
+    - ./run-tests.sh debian_jessie
+  only:
+    - tags
+
+run-unit-tests-fedora-29:
+  stage: test
+  image: fedora:29
+  script:
+    - ./run-tests-rpm.sh fedora_29
+  only:
+    - tags
+
+run-unit-tests-fedora-28:
+  stage: test
+  image: fedora:28
+  script:
+    - ./run-tests-rpm.sh fedora_28
+  only:
+    - tags
+
+run-unit-tests-centos-6:
+  stage: test
+  image: centos:6
+  script:
+    - ./run-tests-rpm.sh centos_6
+  only:
+    - tags
+
+run-unit-tests-centos-7:
+  stage: test
+  image: centos:7
+  script:
+    - ./run-tests-rpm.sh centos_7
   only:
     - tags
 

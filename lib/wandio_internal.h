@@ -24,15 +24,14 @@
  *
  */
 
-#ifndef WANDIO_INTERNAL_H 
+#ifndef WANDIO_INTERNAL_H
 #define WANDIO_INTERNAL_H 1 /**< Guard Define */
 #include "config.h"
-#include <sys/types.h>
-#include <stdio.h>
 #include <inttypes.h>
+#include <stdio.h>
+#include <sys/types.h>
 
-
-/** @name libwandioio options 
+/** @name libwandioio options
  * @{ */
 extern int force_directio_read;
 extern int force_directio_write;

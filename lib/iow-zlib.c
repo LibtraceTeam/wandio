@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) 2007-2016 The University of Waikato, Hamilton, New Zealand.
+ * Copyright (c) 2007-2019 The University of Waikato, Hamilton, New Zealand.
  * All rights reserved.
  *
  * This file is part of libwandio.
@@ -24,114 +24,105 @@
  *
  */
 
-
 #include "config.h"
-#include <zlib.h>
-#include "wandio.h"
-#include <sys/types.h>
-#include <sys/stat.h>
+#include <assert.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <zlib.h>
+#include "wandio.h"
 
 /* Libwandio IO module implementing a zlib writer */
 
-enum err_t {
-	ERR_OK	= 1,
-	ERR_EOF = 0,
-	ERR_ERROR = -1
-};
+enum err_t { ERR_OK = 1, ERR_EOF = 0, ERR_ERROR = -1 };
 
 struct zlibw_t {
-	z_stream strm;
-	Bytef outbuff[1024*1024];
-	iow_t *child;
-	enum err_t err;
-	int inoffset;
+        z_stream strm;
+        Bytef outbuff[WANDIO_BUFFER_SIZE];
+        iow_t *child;
+        enum err_t err;
+        int inoffset;
 };
 
-
-extern iow_source_t zlib_wsource; 
+extern iow_source_t zlib_wsource;
 
 #define DATA(iow) ((struct zlibw_t *)((iow)->data))
-#define min(a,b) ((a)<(b) ? (a) : (b))
+#define min(a, b) ((a) < (b) ? (a) : (b))
 
-iow_t *zlib_wopen(iow_t *child, int compress_level)
-{
-	iow_t *iow;
-	if (!child)
-		return NULL;
-	iow = malloc(sizeof(iow_t));
-	iow->source = &zlib_wsource;
-	iow->data = malloc(sizeof(struct zlibw_t));
+iow_t *zlib_wopen(iow_t *child, int compress_level) {
+        iow_t *iow;
+        if (!child)
+                return NULL;
+        iow = malloc(sizeof(iow_t));
+        iow->source = &zlib_wsource;
+        iow->data = malloc(sizeof(struct zlibw_t));
 
-	DATA(iow)->child = child;
+        DATA(iow)->child = child;
 
-	DATA(iow)->strm.next_in = NULL;
-	DATA(iow)->strm.avail_in = 0;
-	DATA(iow)->strm.next_out = DATA(iow)->outbuff;
-	DATA(iow)->strm.avail_out = sizeof(DATA(iow)->outbuff);
-	DATA(iow)->strm.zalloc = Z_NULL;
-	DATA(iow)->strm.zfree = Z_NULL;
-	DATA(iow)->strm.opaque = NULL;
-	DATA(iow)->err = ERR_OK;
+        DATA(iow)->strm.next_in = NULL;
+        DATA(iow)->strm.avail_in = 0;
+        DATA(iow)->strm.next_out = DATA(iow)->outbuff;
+        DATA(iow)->strm.avail_out = sizeof(DATA(iow)->outbuff);
+        DATA(iow)->strm.zalloc = Z_NULL;
+        DATA(iow)->strm.zfree = Z_NULL;
+        DATA(iow)->strm.opaque = NULL;
+        DATA(iow)->err = ERR_OK;
 
-	deflateInit2(&DATA(iow)->strm, 
-			compress_level,	/* Level */
-			Z_DEFLATED, 	/* Method */
-			15 | 16, 	/* 15 bits of windowsize, 16 == use gzip header */
-			9,		/* Use maximum (fastest) amount of memory usage */
-			Z_DEFAULT_STRATEGY
-		);
+        deflateInit2(&DATA(iow)->strm, compress_level, /* Level */
+                     Z_DEFLATED,                       /* Method */
+                     15 | 16, /* 15 bits of windowsize, 16 == use gzip header */
+                     9,       /* Use maximum (fastest) amount of memory usage */
+                     Z_DEFAULT_STRATEGY);
 
-	return iow;
+        return iow;
 }
 
+static int64_t zlib_wwrite(iow_t *iow, const char *buffer, int64_t len) {
+        if (DATA(iow)->err == ERR_EOF) {
+                return 0; /* EOF */
+        }
+        if (DATA(iow)->err == ERR_ERROR) {
+                return -1; /* ERROR! */
+        }
 
-static int64_t zlib_wwrite(iow_t *iow, const char *buffer, int64_t len)
-{
-	if (DATA(iow)->err == ERR_EOF) {
-		return 0; /* EOF */
-	}
-	if (DATA(iow)->err == ERR_ERROR) {
-		return -1; /* ERROR! */
-	}
+        DATA(iow)->strm.next_in =
+            (Bytef *)buffer; /* This casts away const, but it's really const
+                              * anyway
+                              */
+        DATA(iow)->strm.avail_in = len;
 
-	DATA(iow)->strm.next_in = (Bytef*)buffer; /* This casts away const, but it's really const 
-						   * anyway 
-						   */
-	DATA(iow)->strm.avail_in = len;
-
-	while (DATA(iow)->err == ERR_OK && DATA(iow)->strm.avail_in > 0) {
-		while (DATA(iow)->strm.avail_out <= 0) {
-			int bytes_written = wandio_wwrite(DATA(iow)->child, 
-				(char *)DATA(iow)->outbuff,
-				sizeof(DATA(iow)->outbuff));
-			if (bytes_written <= 0) { /* Error */
-				DATA(iow)->err = ERR_ERROR;
-				/* Return how much data we managed to write ok */
-				if (DATA(iow)->strm.avail_in != (uint32_t)len) {
-					return len-DATA(iow)->strm.avail_in;
-				}
-				/* Now return error */
-				return -1;
-			}
-			DATA(iow)->strm.next_out = DATA(iow)->outbuff;
-			DATA(iow)->strm.avail_out = sizeof(DATA(iow)->outbuff);
-		}
-		/* Decompress some data into the output buffer */
-		int err=deflate(&DATA(iow)->strm, Z_NO_FLUSH);
-		switch(err) {
-			case Z_OK:
-				DATA(iow)->err = ERR_OK;
-				break;
-			default:
-				DATA(iow)->err = ERR_ERROR;
-		}
-	}
-	/* Return the number of bytes compressed */
-	return len-DATA(iow)->strm.avail_in;
+        while (DATA(iow)->err == ERR_OK && DATA(iow)->strm.avail_in > 0) {
+                while (DATA(iow)->strm.avail_out <= 0) {
+                        int bytes_written = wandio_wwrite(
+                            DATA(iow)->child, (char *)DATA(iow)->outbuff,
+                            sizeof(DATA(iow)->outbuff));
+                        if (bytes_written <= 0) { /* Error */
+                                DATA(iow)->err = ERR_ERROR;
+                                /* Return how much data we managed to write ok
+                                 */
+                                if (DATA(iow)->strm.avail_in != (uint32_t)len) {
+                                        return len - DATA(iow)->strm.avail_in;
+                                }
+                                /* Now return error */
+                                return -1;
+                        }
+                        DATA(iow)->strm.next_out = DATA(iow)->outbuff;
+                        DATA(iow)->strm.avail_out = sizeof(DATA(iow)->outbuff);
+                }
+                /* Decompress some data into the output buffer */
+                int err = deflate(&DATA(iow)->strm, Z_NO_FLUSH);
+                switch (err) {
+                case Z_OK:
+                        DATA(iow)->err = ERR_OK;
+                        break;
+                default:
+                        DATA(iow)->err = ERR_ERROR;
+                }
+        }
+        /* Return the number of bytes compressed */
+        return len - DATA(iow)->strm.avail_in;
 }
 
 static int zlib_wflush(iow_t *iow) {
@@ -145,9 +136,9 @@ static int zlib_wflush(iow_t *iow) {
                 return -1;
         }
 
-        res = wandio_wwrite(DATA(iow)->child,
-                        (char*)DATA(iow)->outbuff,
-                        sizeof(DATA(iow)->outbuff)-DATA(iow)->strm.avail_out);
+        res = wandio_wwrite(DATA(iow)->child, (char *)DATA(iow)->outbuff,
+                            sizeof(DATA(iow)->outbuff) -
+                                DATA(iow)->strm.avail_out);
         if (res < 0) {
                 DATA(iow)->err = ERR_ERROR;
                 return res;
@@ -162,40 +153,33 @@ static int zlib_wflush(iow_t *iow) {
         return res;
 }
 
-static void zlib_wclose(iow_t *iow)
-{
-	int res;
+static void zlib_wclose(iow_t *iow) {
+        int res;
 
-	while (1) {
-		res = deflate(&DATA(iow)->strm, Z_FINISH);
+        while (1) {
+                res = deflate(&DATA(iow)->strm, Z_FINISH);
 
-		if (res == Z_STREAM_END)
-			break;
-		if (res == Z_STREAM_ERROR) {
-			fprintf(stderr, "Z_STREAM_ERROR while closing output\n");
-			break;
-		}
-	
-		wandio_wwrite(DATA(iow)->child, 
-				(char*)DATA(iow)->outbuff,
-				sizeof(DATA(iow)->outbuff)-DATA(iow)->strm.avail_out);
-		DATA(iow)->strm.next_out = DATA(iow)->outbuff;
-		DATA(iow)->strm.avail_out = sizeof(DATA(iow)->outbuff);
-	}
+                if (res == Z_STREAM_END)
+                        break;
+                if (res == Z_STREAM_ERROR) {
+                        fprintf(stderr,
+                                "Z_STREAM_ERROR while closing output\n");
+                        break;
+                }
 
-	deflateEnd(&DATA(iow)->strm);
-	wandio_wwrite(DATA(iow)->child, 
-			(char *)DATA(iow)->outbuff,
-			sizeof(DATA(iow)->outbuff)-DATA(iow)->strm.avail_out);
-	wandio_wdestroy(DATA(iow)->child);
-	free(iow->data);
-	free(iow);
+                wandio_wwrite(DATA(iow)->child, (char *)DATA(iow)->outbuff,
+                              sizeof(DATA(iow)->outbuff) -
+                                  DATA(iow)->strm.avail_out);
+                DATA(iow)->strm.next_out = DATA(iow)->outbuff;
+                DATA(iow)->strm.avail_out = sizeof(DATA(iow)->outbuff);
+        }
+
+        deflateEnd(&DATA(iow)->strm);
+        wandio_wwrite(DATA(iow)->child, (char *)DATA(iow)->outbuff,
+                      sizeof(DATA(iow)->outbuff) - DATA(iow)->strm.avail_out);
+        wandio_wdestroy(DATA(iow)->child);
+        free(iow->data);
+        free(iow);
 }
 
-iow_source_t zlib_wsource = {
-	"zlibw",
-	zlib_wwrite,
-        zlib_wflush,
-	zlib_wclose
-};
-
+iow_source_t zlib_wsource = {"zlibw", zlib_wwrite, zlib_wflush, zlib_wclose};

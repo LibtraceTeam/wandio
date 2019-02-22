@@ -1,14 +1,16 @@
-The primary authors of libwandio were:
+The original authors of libwandio were:
  * Perry Lorier
  * Shane Alcock
 
 Libwandio is currently maintained by Shane Alcock <salcock@waikato.ac.nz>.
 
 Thanks to Alistair King for numerous contributions (including the entirety
-of the HTTP reader), bug reports and being kind enough to take on the job of 
+of the HTTP reader), bug reports and being kind enough to take on the job of
 separating libwandio from libtrace.
 
 Thanks to Robert Zeh for adding support for zstd.
+
+Thanks to Sergey Cherepanov for adding support for lz4.
 
 Thanks to Mingwei Zhang for adding ability to resume HTTP reads and fixing
 a ton of lazy error checking issues.

@@ -3,10 +3,10 @@
 # Now you only need to update the version number in two places - below,
 # and in the README
 
-AC_INIT([wandio],[4.0.0],[contact@wand.net.nz],[wandio])
+AC_INIT([wandio],[4.1.0],[contact@wand.net.nz],[wandio])
 
 WANDIO_MAJOR=4
-WANDIO_MID=0
+WANDIO_MID=1
 WANDIO_MINOR=0
 
 # OpenSolaris hides libraries like libncurses in /usr/gnu/lib, which is not
@@ -232,6 +232,63 @@ AS_IF([test "x$have_zstd" = "xyes"], [
 	with_zstd=no]
 )
 
+AC_ARG_WITH([qatzip],
+	AC_HELP_STRING([--with-qatzip], [build with support for Intel QuickAssist compression]))
+
+AS_IF([test "x$with_qatzip" != "xno"],
+	[
+	AC_CHECK_LIB(qatzip, qzCompress, have_qatzip=yes, have_qatzip=no)
+	], [have_qatzip=no])
+
+AS_IF([test "x$have_qatzip" = "xyes"], [
+	if test "$ac_cv_lib_qatzip_qzCompress" != "none required"; then
+		LIBWANDIO_LIBS="$LIBWANDIO_LIBS -lqatzip"
+	fi
+	AC_DEFINE(HAVE_LIBQATZIP, 1, "Compiled with QATzip support")
+	with_qatzip=yes],
+
+
+	[AS_IF([test "x$with_qatzip" = "xyes"],
+		[AC_MSG_ERROR([QATzip requested but not found])])
+	AC_DEFINE(HAVE_LIBQATZIP, 0, "Compiled with QATzip support")
+	with_qatzip=no]
+)
+
+AC_ARG_WITH([lz4],
+        AC_HELP_STRING([--with-lz4], [build with support for lz4 compressed files]))
+
+AS_IF([test "x$with_lz4" != "xno"],
+        [
+        AC_CHECK_LIB(lz4, LZ4F_createDecompressionContext, have_lz4f=yes, have_lz4f=no)
+        ], [have_zstd=no])
+
+AS_IF([test "x$have_lz4f" = "xyes"], [
+        if test "$ac_cv_lib_lz4_code" != "none required"; then
+                LIBWANDIO_LIBS="$LIBWANDIO_LIBS -llz4"
+        fi
+        AC_DEFINE(HAVE_LIBLZ4F, 1, "Compiled with lz4 frame support")
+        AC_CHECK_LIB(lz4, LZ4F_getVersion, have_lz4_173=yes, have_lz4_173=no)
+        if test "x$have_lz4_173" = "xyes"; then
+                AC_DEFINE(HAVE_LIBLZ4_MOVABLE, 1, "If defined then liblz4 does NOT have the ERROR_srcPtr_wrong bug")
+        fi
+        with_lz4=frameapi],
+        [
+            AC_DEFINE(HAVE_LIBLZ4F, 0, "Compiled with lz4 frame support")
+            AC_CHECK_LIB(lz4, LZ4_decompress_safe_continue, have_lz4s=yes, have_lz4s=no)
+            AS_IF([test "x$have_lz4s" = "xyes"], [
+                if test "$ac_cv_lib_lz4_code" != "none required"; then
+                    LIBWANDIO_LIBS="$LIBWANDIO_LIBS -llz4"
+                fi
+                AC_DEFINE(HAVE_LIBLZ4S, 1, "Compiled with lz4 stream support")
+                with_lz4=streamapi
+            ], [
+                AC_DEFINE(HAVE_LIBLZ4S, 0, "Compiled with lz4 stream support")
+                with_lz4=no])
+
+            AS_IF([test "x$with_lz4" = "xyes"], [
+                    AC_MSG_ERROR([lz4 requested but frame API was not found])])
+        ]
+)
 
 AC_ARG_WITH([http],
         AC_HELP_STRING([--with-http], [build with support for reading files over http (using libcurl)]))
@@ -262,6 +319,9 @@ AM_CONDITIONAL([HAVE_ZLIB], [test "x$with_zlib" != "xno"])
 AM_CONDITIONAL([HAVE_LZO], [ test "x$with_lzo" != "xno"])
 AM_CONDITIONAL([HAVE_LZMA], [ test "x$with_lzma" != "xno"])
 AM_CONDITIONAL([HAVE_ZSTD], [ test "x$with_zstd" != "xno"])
+AM_CONDITIONAL([HAVE_QATZIP], [ test "x$with_qatzip" != "xno"])
+AM_CONDITIONAL([HAVE_LZ4], [ test "x$with_lz4" != "xno"])
+AM_CONDITIONAL([HAVE_ZSTD_OR_LZ4], [ test "x$with_zstd" != "xno" -o "x$with_lz4" != "xno"])
 AM_CONDITIONAL([HAVE_HTTP], [ test "x$with_http" != "xno"])
 
 # Set all our output variables
@@ -290,6 +350,19 @@ reportopt() {
 	fi
 }
 
+reportlz4opt() {
+        if test x"$2" = xframeapi; then
+                AC_MSG_NOTICE([$1: Yes])
+        else
+            if test x"$2" = xstreamapi; then
+                AC_MSG_NOTICE([$1: No, API is too old])
+            else
+                AC_MSG_NOTICE([$1: No])
+            fi
+        fi
+}
+
+
 
 # Report which configure options were set
 echo
@@ -299,4 +372,6 @@ reportopt "Compiled with compressed file (bz2) support" $with_bzip2
 reportopt "Compiled with compressed file (lzo write only) support" $with_lzo
 reportopt "Compiled with compressed file (lzma) support" $with_lzma
 reportopt "Compiled with compressed file (zstd) support" $with_zstd
+reportlz4opt "Compiled with compressed file (lz4) support" $with_lz4
+reportopt "Compiled with Intel QuickAssist Technology support" $with_qatzip
 reportopt "Compiled with http read (libcurl) support" $with_http
