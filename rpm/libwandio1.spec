@@ -32,7 +32,7 @@ Summary:        Development files for %{name}
 Requires:       %{name}%{?_isa} = %{version}-%{release}
 
 %package        tools
-Summary:        Example tools for the ${name} library
+Summary:        Example tools for the %{name} library
 Requires:       %{name}%{?_isa} = %{version}-%{release}
 
 %description    devel
