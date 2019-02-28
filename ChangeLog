@@ -1,3 +1,7 @@
+Version 4.1.1
+=============
+ * Fix bad version numbering of installed libwandder.so
+
 Version 4.1.0
 =============
 Thanks to Sergey Cherepanov and Alistair King for contributing to this release
