@@ -85,15 +85,15 @@ static size_t auth_header_cb(char *buf, size_t size, size_t nmemb, void *data) {
   keystone_auth_token_t *token = (keystone_auth_token_t *)data;
   size_t buflen = size * nmemb;
   char *p;
-  int chomplen = 0;
+  size_t chomplen = 0;
   int token_len = 0;
 
   if (buflen > strlen(TOKEN_HDR) &&
       strncmp(buf, TOKEN_HDR, strlen(TOKEN_HDR)) == 0) {
     // figure out how much trailing garbage there is (e.g., newline)
     // apparently it is possible that there will be none
-    p = buf + buflen;
-    while (*p == '\0' || *p == '\n' || *p == '\r') {
+    p = buf + buflen - 1;
+    while ((chomplen < buflen) && (*p == '\0' || *p == '\n' || *p == '\r')) {
       p--;
       chomplen++;
     }
