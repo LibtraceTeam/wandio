@@ -1,3 +1,9 @@
+libwandio1 (4.1.2-1) unstable; urgency=medium
+
+  * Fix swift buffer overflow bug
+
+ -- Shane Alcock <salcock@waikato.ac.nz>  Wed, 06 Mar 2019 13:07:02 +1300
+
 libwandio1 (4.1.1-1) unstable; urgency=medium
 
   * Fix bad version number for installed .so
