@@ -1,5 +1,5 @@
 Name:           libwandio1
-Version:        4.1.1
+Version:        4.1.2
 Release:        1%{?dist}
 Summary:        C Multi-Threaded File Compression and Decompression Library
 
