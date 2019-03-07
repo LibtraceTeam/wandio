@@ -376,7 +376,7 @@ typedef int64_t(read_cb_t)(void *file, void *buffer, int64_t len);
  * @param chomp         Should the newline be removed
  * @return the number of bytes actually read
  */
-int64_t wandio_generic_fgets(void *file, void *buffer, off_t len, int chomp,
+int64_t wandio_generic_fgets(void *file, void *buffer, int64_t len, int chomp,
                       read_cb_t *read_cb);
 
 /** Read a line from the given wandio file pointer
@@ -406,7 +406,7 @@ int wandio_detect_compression_type(const char *filename);
  * The arguments for this function are the same as those for vprintf(3). See the
  * vprintf(3) manpage for more details.
  */
-off_t wandio_vprintf(iow_t *file, const char *format, va_list args);
+int64_t wandio_vprintf(iow_t *file, const char *format, va_list args);
 
 /** Print a string to a wandio file using a printf-style API
  *
@@ -418,7 +418,7 @@ off_t wandio_vprintf(iow_t *file, const char *format, va_list args);
  * The arguments for this function are the same as those for printf(3). See the
  * printf(3) manpage for more details.
  */
-off_t wandio_printf(iow_t *file, const char *format, ...);
+int64_t wandio_printf(iow_t *file, const char *format, ...);
 
 /** @} */
 #ifdef __cplusplus
