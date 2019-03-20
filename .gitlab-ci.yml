@@ -8,8 +8,8 @@ build-amd64-debian-jessie:
   image: debian:jessie
   script:
     - ./gitlab-build.sh
-    - mkdir -p built-packages/amd64/debian_jessie/
-    - mv ../*.deb built-packages/amd64/debian_jessie/
+    - mkdir -p built-packages/debian_jessie/
+    - mv ../*.deb built-packages/debian_jessie/
   artifacts:
     paths:
       - built-packages/*
@@ -22,8 +22,8 @@ build-amd64-debian-stretch:
   image: debian:stretch
   script:
     - ./gitlab-build.sh
-    - mkdir -p built-packages/amd64/debian_stretch/
-    - mv ../*.deb built-packages/amd64/debian_stretch/
+    - mkdir -p built-packages/debian_stretch/
+    - mv ../*.deb built-packages/debian_stretch/
   artifacts:
     paths:
       - built-packages/*
@@ -36,8 +36,8 @@ build-amd64-ubuntu-xenial:
   image: ubuntu:xenial
   script:
     - ./gitlab-build.sh
-    - mkdir -p built-packages/amd64/ubuntu_xenial/
-    - mv ../*.deb built-packages/amd64/ubuntu_xenial/
+    - mkdir -p built-packages/ubuntu_xenial/
+    - mv ../*.deb built-packages/ubuntu_xenial/
   artifacts:
     paths:
       - built-packages/*
@@ -50,8 +50,8 @@ build-amd64-ubuntu-bionic:
   image: ubuntu:bionic
   script:
     - ./gitlab-build.sh
-    - mkdir -p built-packages/amd64/ubuntu_bionic/
-    - mv ../*.deb built-packages/amd64/ubuntu_bionic/
+    - mkdir -p built-packages/ubuntu_bionic/
+    - mv ../*.deb built-packages/ubuntu_bionic/
   artifacts:
     paths:
       - built-packages/*
@@ -64,8 +64,8 @@ build-amd64-ubuntu-cosmic:
   image: ubuntu:cosmic
   script:
     - ./gitlab-build.sh
-    - mkdir -p built-packages/amd64/ubuntu_cosmic/
-    - mv ../*.deb built-packages/amd64/ubuntu_cosmic/
+    - mkdir -p built-packages/ubuntu_cosmic/
+    - mv ../*.deb built-packages/ubuntu_cosmic/
   artifacts:
     paths:
       - built-packages/*
@@ -78,8 +78,8 @@ build-amd64-fedora-29:
   image: fedora:29
   script:
     - ./gitlab-build-rpm.sh fedora29
-    - mkdir -p built-packages/amd64/fedora_29/
-    - mv ~/rpmbuild/RPMS/x86_64/*.rpm built-packages/amd64/fedora_29/
+    - mkdir -p built-packages/fedora_29/
+    - mv ~/rpmbuild/RPMS/x86_64/*.rpm built-packages/fedora_29/
   artifacts:
     paths:
       - built-packages/*
@@ -92,8 +92,8 @@ build-amd64-fedora-28:
   image: fedora:28
   script:
     - ./gitlab-build-rpm.sh fedora28
-    - mkdir -p built-packages/amd64/fedora_28/
-    - mv ~/rpmbuild/RPMS/x86_64/*.rpm built-packages/amd64/fedora_28/
+    - mkdir -p built-packages/fedora_28/
+    - mv ~/rpmbuild/RPMS/x86_64/*.rpm built-packages/fedora_28/
   artifacts:
     paths:
       - built-packages/*
@@ -106,8 +106,8 @@ build-amd64-centos7:
   image: centos:7
   script:
     - ./gitlab-build-rpm.sh centos7
-    - mkdir -p built-packages/amd64/centos_7/
-    - mv ~/rpmbuild/RPMS/x86_64/*.rpm built-packages/amd64/centos_7/
+    - mkdir -p built-packages/centos_7/
+    - mv ~/rpmbuild/RPMS/x86_64/*.rpm built-packages/centos_7/
   artifacts:
     paths:
       - built-packages/*
@@ -120,8 +120,8 @@ build-amd64-centos6:
   image: centos:6
   script:
     - ./gitlab-build-rpm.sh centos6
-    - mkdir -p built-packages/amd64/centos_6/
-    - mv ~/rpmbuild/RPMS/x86_64/*.rpm built-packages/amd64/centos_6/
+    - mkdir -p built-packages/centos_6/
+    - mv ~/rpmbuild/RPMS/x86_64/*.rpm built-packages/centos_6/
   artifacts:
     paths:
       - built-packages/*
