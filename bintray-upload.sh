@@ -4,7 +4,7 @@ set -e -o pipefail
 
 BINTRAY_DEB_REPO="wand/general"
 BINTRAY_RPM_REPO="wand/general-rpm"
-BINTRAY_LICENSE="LGPL-3"
+BINTRAY_LICENSE="LGPL-3.0"
 
 apt-get update && apt-get install -y curl util-linux
 
