@@ -44,7 +44,7 @@ for path in `find built-packages/ -maxdepth 1 -type d`; do
                 pkg_name=`echo ${rev_filename} | cut -d '-' -f4- | rev`
                 pkg_version=`echo ${rev_filename} | cut -d '-' -f1-3 | rev | cut -d '.' -f1-3`
                 pkg_arch=`echo ${rev_filename} | cut -d '-' -f1 | rev | cut -d '.' -f1`
-                pkg_dist=centos
+                pkg_dist="centos"
                 pkg_rel=`echo ${rev_filename} | cut -d '.' -f2 | rev | cut -d '-' -f 1`
 
                 if [ "$pkg_rel" = "el6" ]; then
@@ -60,7 +60,7 @@ for path in `find built-packages/ -maxdepth 1 -type d`; do
                 pkg_name=`echo ${rev_filename} | cut -d '-' -f3- | rev`
                 pkg_version=`echo ${rev_filename} | cut -d '-' -f1-2 | rev | cut -d '.' -f1-3`
                 pkg_arch=`echo ${rev_filename} | cut -d '.' -f2 | rev`
-                pkg_dist=fedora
+                pkg_dist="fedora"
                 pkg_rel=`echo ${rev_filename} | cut -d '.' -f3 | rev`
                 releasever="${pkg_rel:2}"
             fi
