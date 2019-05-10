@@ -156,7 +156,9 @@ static int fill_buffer(io_t *io) {
                 struct timeval to;
                 // the following is adaped from docs/examples/fopen.c
                 to.tv_sec = 10, to.tv_usec = 0;  // 10 seconds
-                curl_multi_timeout(DATA(io)->multi, &curl_to);
+                if (curl_multi_timeout(DATA(io)->multi, &curl_to) != CURLM_OK) {
+                  return -1;
+                }
                 if (curl_to >= 0) {
                         to.tv_sec = curl_to / 1000;
                         if (to.tv_sec > 1)
@@ -168,8 +170,10 @@ static int fill_buffer(io_t *io) {
                 FD_ZERO(&fdw);
                 FD_ZERO(&fde);
 
-                /* FIXME: check return code */
-                curl_multi_fdset(DATA(io)->multi, &fdr, &fdw, &fde, &maxfd);
+                if (curl_multi_fdset(DATA(io)->multi, &fdr, &fdw, &fde,
+                                     &maxfd) != CURLM_OK) {
+                  return -1;
+                }
                 if (maxfd >= 0 &&
                     (rc = select(maxfd + 1, &fdr, &fdw, &fde, &to)) < 0)
                         break;
@@ -182,8 +186,10 @@ static int fill_buffer(io_t *io) {
                         nanosleep(&req, &rem);
                 }
                 curl_easy_pause(DATA(io)->curl, CURLPAUSE_CONT);
-                /* FIXME: check return code */
-                rc = curl_multi_perform(DATA(io)->multi, &n_running);
+                if (curl_multi_perform(DATA(io)->multi, &n_running) !=
+                    CURLM_OK) {
+                  return -1;
+                }
                 if (DATA(io)->total_length < 0) {
                         // update file length.
                         double cl;
@@ -194,6 +200,21 @@ static int fill_buffer(io_t *io) {
                 }
         } while (n_running &&
                  DATA(io)->l_buf < DATA(io)->m_buf - CURL_MAX_WRITE_SIZE);
+
+        // check if there were any errors from curl
+        struct CURLMsg *m = NULL;
+        do {
+          int msgq = 0;
+          m = curl_multi_info_read(DATA(io)->multi, &msgq);
+          if (m != NULL && m->data.result != CURLE_OK) {
+            // there was an error reading -- if this is the first
+            // read, then the wandio_create call will fail.
+            fprintf(stderr, "HTTP ERROR: %s (%d)\n",
+                    curl_easy_strerror(m->data.result),
+                    m->data.result);
+            return -1;
+          }
+        } while (m != NULL);
 
         if (DATA(io)->l_buf < DATA(io)->m_buf - CURL_MAX_WRITE_SIZE) {
                 if (DATA(io)->off0 + DATA(io)->p_buf >=
@@ -272,9 +293,10 @@ io_t *init_io(io_t *io) {
         curl_easy_setopt(DATA(io)->curl, CURLOPT_VERBOSE, 0L);
         curl_easy_setopt(DATA(io)->curl, CURLOPT_NOSIGNAL, 1L);
         curl_easy_setopt(DATA(io)->curl, CURLOPT_WRITEFUNCTION, write_cb);
-        curl_easy_setopt(DATA(io)->curl, CURLOPT_SSL_VERIFYPEER, 0L);
-        curl_easy_setopt(DATA(io)->curl, CURLOPT_SSL_VERIFYHOST, 0L);
+        curl_easy_setopt(DATA(io)->curl, CURLOPT_SSL_VERIFYPEER, 1L);
+        curl_easy_setopt(DATA(io)->curl, CURLOPT_SSL_VERIFYHOST, 1L);
         curl_easy_setopt(DATA(io)->curl, CURLOPT_FOLLOWLOCATION, 1L);
+        curl_easy_setopt(DATA(io)->curl, CURLOPT_USERAGENT, "wandio/"PACKAGE_VERSION);
 
         /* for remote files, the buffer set to 2*CURL_MAX_WRITE_SIZE */
         DATA(io)->m_buf = CURL_MAX_WRITE_SIZE * 2;

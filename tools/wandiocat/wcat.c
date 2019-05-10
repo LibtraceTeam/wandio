@@ -101,6 +101,7 @@ int main(int argc, char *argv[]) {
         iow_t *iow = wandio_wcreate(output, compress_type, compress_level, 0);
         /* stdout */
         int i;
+        int rc = 0;
 
 #if _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
         if (posix_memalign((void **)&buffer, 4096, WANDIO_BUFFER_SIZE) != 0) {
@@ -117,6 +118,7 @@ int main(int argc, char *argv[]) {
                 io_t *ior = wandio_create(argv[i]);
                 if (!ior) {
                         fprintf(stderr, "Failed to open %s\n", argv[i]);
+                        rc++;
                         continue;
                 }
 
@@ -131,5 +133,5 @@ int main(int argc, char *argv[]) {
         }
         free(buffer);
         wandio_wdestroy(iow);
-        return 0;
+        return rc;
 }
