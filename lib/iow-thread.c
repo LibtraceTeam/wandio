@@ -150,7 +150,7 @@ static void *thread_consumer(void *userdata) {
         return NULL;
 }
 
-iow_t *thread_wopen(iow_t *child) {
+DLLEXPORT iow_t *thread_wopen(iow_t *child) {
         iow_t *state;
 
         if (!child) {

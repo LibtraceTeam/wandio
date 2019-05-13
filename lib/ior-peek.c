@@ -65,7 +65,7 @@ extern io_source_t peek_source;
 #define DATA(io) ((struct peek_t *)((io)->data))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
-io_t *peek_open(io_t *child) {
+DLLEXPORT io_t *peek_open(io_t *child) {
         io_t *io;
         if (!child)
                 return NULL;

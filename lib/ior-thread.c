@@ -152,7 +152,7 @@ static void *thread_producer(void *userdata) {
         return NULL;
 }
 
-io_t *thread_open(io_t *parent) {
+DLLEXPORT io_t *thread_open(io_t *parent) {
         io_t *state;
         sigset_t set;
         int s;

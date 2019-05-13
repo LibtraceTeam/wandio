@@ -240,7 +240,8 @@ static int fill_buffer(io_t *io) {
         return DATA(io)->l_buf;
 }
 
-io_t *http_open_hdrs(const char *filename, char **hdrs, int hdrs_cnt) {
+DLLEXPORT io_t *http_open_hdrs(const char *filename, char **hdrs, int hdrs_cnt)
+{
         io_t *io = malloc(sizeof(io_t));
         if (!io)
                 return NULL;
@@ -270,7 +271,7 @@ io_t *http_open_hdrs(const char *filename, char **hdrs, int hdrs_cnt) {
         return io;
 }
 
-io_t *http_open(const char *filename) {
+DLLEXPORT io_t *http_open(const char *filename) {
         return http_open_hdrs(filename, NULL, 0);
 }
 
