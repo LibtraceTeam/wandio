@@ -96,7 +96,7 @@ static int safe_open(const char *filename, int flags) {
         return fd;
 }
 
-iow_t *stdio_wopen(const char *filename, int flags) {
+DLLEXPORT iow_t *stdio_wopen(const char *filename, int flags) {
         iow_t *iow = malloc(sizeof(iow_t));
         iow->source = &stdio_wsource;
         iow->data = malloc(sizeof(struct stdiow_t));

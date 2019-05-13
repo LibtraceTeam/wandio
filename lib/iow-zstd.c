@@ -46,7 +46,7 @@ struct zstdw_t {
 #define DATA(iow) ((struct zstdw_t *)((iow)->data))
 extern iow_source_t zstd_wsource;
 
-iow_t *zstd_wopen(iow_t *child, int compress_level) {
+DLLEXPORT iow_t *zstd_wopen(iow_t *child, int compress_level) {
         iow_t *iow;
         if (!child)
                 return NULL;

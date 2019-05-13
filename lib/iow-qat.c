@@ -79,7 +79,7 @@ static void qat_perror(int errcode) {
         }
 }
 
-iow_t *qat_wopen(iow_t *child, int compress_level) {
+DLLEXPORT iow_t *qat_wopen(iow_t *child, int compress_level) {
 
         iow_t *iow;
         QzSessionParams_T params;

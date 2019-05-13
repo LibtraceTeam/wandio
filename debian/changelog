@@ -5,6 +5,7 @@ libwandio1 (4.2.0-1) unstable; urgency=medium
   * Replaced 'off_t' parameters and return values with 'int64_t' in
     recently added API functions.
   * Fixed potential uninitialised memory error when closing a wandio writer.
+  * Export symbols for all format-specific 'open' functions.
 
  -- Shane Alcock <salcock@waikato.ac.nz>  Fri, 10 May 2019 13:31:49 +1200
 

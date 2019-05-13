@@ -65,7 +65,7 @@ extern io_source_t swift_source;
 #define SWIFT_PFX_LEN 8
 #define SWIFT_AUTH_TOKEN_HDR "X-Auth-Token: "
 
-io_t *swift_open(const char *filename);
+DLLEXPORT io_t *swift_open(const char *filename);
 static int64_t swift_read(io_t *io, void *buffer, int64_t len);
 static int64_t swift_tell(io_t *io);
 static int64_t swift_seek(io_t *io, int64_t offset, int whence);

@@ -54,7 +54,7 @@ struct lz4w_t {
 #define DATA(iow) ((struct lz4w_t *)((iow)->data))
 extern iow_source_t lz4_wsource;
 
-iow_t *lz4_wopen(iow_t *child, int compress_level) {
+DLLEXPORT iow_t *lz4_wopen(iow_t *child, int compress_level) {
         iow_t *iow;
         if (!child) {
                 return NULL;

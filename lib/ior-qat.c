@@ -80,7 +80,7 @@ struct qat_t {
         enum err_t err;
 };
 
-io_t *qat_open(io_t *parent) {
+DLLEXPORT io_t *qat_open(io_t *parent) {
 
         int x;
         io_t *io;
