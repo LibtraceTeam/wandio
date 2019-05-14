@@ -46,7 +46,7 @@ extern io_source_t stdio_source;
 
 #define DATA(io) ((struct stdio_t *)((io)->data))
 
-io_t *stdio_open(const char *filename) {
+DLLEXPORT io_t *stdio_open(const char *filename) {
         io_t *io = malloc(sizeof(io_t));
         io->data = malloc(sizeof(struct stdio_t));
 

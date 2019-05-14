@@ -51,7 +51,7 @@ extern io_source_t bz_source;
 #define DATA(io) ((struct bz_t *)((io)->data))
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
-io_t *bz_open(io_t *parent) {
+DLLEXPORT io_t *bz_open(io_t *parent) {
         io_t *io;
         if (!parent)
                 return NULL;

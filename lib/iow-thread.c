@@ -118,9 +118,11 @@ static void *thread_consumer(void *userdata) {
                 }
                 /* Empty the buffer using the child writer */
                 pthread_mutex_unlock(&DATA(state)->mutex);
-                wandio_wwrite(DATA(state)->iow,
-                              DATA(state)->buffer[buffer].buffer,
-                              DATA(state)->buffer[buffer].len);
+                if (DATA(state)->buffer[buffer].len > 0) {
+                        wandio_wwrite(DATA(state)->iow,
+                                      DATA(state)->buffer[buffer].buffer,
+                                      DATA(state)->buffer[buffer].len);
+                }
                 if (DATA(state)->buffer[buffer].flush) {
                         wandio_wflush(DATA(state)->iow);
                 }
@@ -148,7 +150,7 @@ static void *thread_consumer(void *userdata) {
         return NULL;
 }
 
-iow_t *thread_wopen(iow_t *child) {
+DLLEXPORT iow_t *thread_wopen(iow_t *child) {
         iow_t *state;
 
         if (!child) {

@@ -1,5 +1,5 @@
 Name:           libwandio1
-Version:        4.1.2
+Version:        4.2.0
 Release:        1%{?dist}
 Summary:        C Multi-Threaded File Compression and Decompression Library
 
@@ -73,6 +73,9 @@ find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 %{_bindir}/wandiocat
 
 %changelog
+* Fri May 10 2019 Shane Alcock <salcock@waikato.ac.nz> - 4.2.0-1
+- New upstream release (4.2.0)
+
 * Thu Feb 21 2019 Shane Alcock <salcock@waikato.ac.nz> - 4.1.0-1
 - First libwandio package
 

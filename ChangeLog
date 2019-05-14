@@ -1,3 +1,12 @@
+Version 4.2.0
+=============
+ * Include wandio version number in the HTTP user-agent
+ * Improved error detection and handling when reading HTTP
+ * Replaced 'off_t' parameters and return values with 'int64_t' in
+   recently added API functions.
+ * Fixed potential uninitialised memory error when closing a wandio writer.
+ * Export symbols for all format-specific open functions.
+
 Version 4.1.2
 =============
  * Fix buffer overflow bug in the swift reading code (thanks Alistair).

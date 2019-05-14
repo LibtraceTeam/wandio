@@ -53,7 +53,7 @@ extern io_source_t zlib_source;
 #define DATA(io) ((struct zlib_t *)((io)->data))
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
-io_t *zlib_open(io_t *parent) {
+DLLEXPORT io_t *zlib_open(io_t *parent) {
         io_t *io;
         if (!parent)
                 return NULL;

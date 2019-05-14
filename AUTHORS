@@ -15,4 +15,7 @@ Thanks to Sergey Cherepanov for adding support for lz4.
 Thanks to Mingwei Zhang for adding ability to resume HTTP reads and fixing
 a ton of lazy error checking issues.
 
+Thanks to Derrick Lyndon Pallas for fixing an uninitialised memory error
+when closing a wandio writer.
+
 Thanks to Brad Cowie for packaging libwandio for Debian.

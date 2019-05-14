@@ -51,7 +51,7 @@ extern iow_source_t lzma_wsource;
 #define DATA(iow) ((struct lzmaw_t *)((iow)->data))
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
-iow_t *lzma_wopen(iow_t *child, int compress_level) {
+DLLEXPORT iow_t *lzma_wopen(iow_t *child, int compress_level) {
         iow_t *iow;
         if (!child)
                 return NULL;

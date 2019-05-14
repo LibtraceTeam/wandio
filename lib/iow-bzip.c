@@ -50,7 +50,7 @@ extern iow_source_t bz_wsource;
 #define DATA(iow) ((struct bzw_t *)((iow)->data))
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
-iow_t *bz_wopen(iow_t *child, int compress_level) {
+DLLEXPORT iow_t *bz_wopen(iow_t *child, int compress_level) {
         iow_t *iow;
         if (!child)
                 return NULL;

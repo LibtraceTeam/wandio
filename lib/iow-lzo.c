@@ -265,7 +265,7 @@ static void *lzo_compress_thread(void *data) {
         return NULL;
 }
 
-iow_t *lzo_wopen(iow_t *child, int compress_level) {
+DLLEXPORT iow_t *lzo_wopen(iow_t *child, int compress_level) {
         const int opt_filter = 0;
         int flags;
         iow_t *iow;

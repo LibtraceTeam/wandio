@@ -487,7 +487,7 @@ DLLEXPORT void wandio_wdestroy(iow_t *iow) {
 
 /** Alistair's API extensions from "wandio_util" */
 
-DLLEXPORT int64_t wandio_generic_fgets(void *file, void *buffer, off_t len,
+DLLEXPORT int64_t wandio_generic_fgets(void *file, void *buffer, int64_t len,
                                 int chomp, read_cb_t *read_cb) {
         assert(file != NULL);
 
@@ -588,7 +588,7 @@ DLLEXPORT int wandio_detect_compression_type(const char *filename) {
         return WANDIO_COMPRESS_NONE;
 }
 
-DLLEXPORT inline off_t wandio_vprintf(iow_t *file, const char *format,
+DLLEXPORT inline int64_t wandio_vprintf(iow_t *file, const char *format,
                                       va_list args) {
         assert(file != NULL);
         char *buf;
@@ -605,7 +605,7 @@ DLLEXPORT inline off_t wandio_vprintf(iow_t *file, const char *format,
         return len;
 }
 
-DLLEXPORT inline off_t wandio_printf(iow_t *file, const char *format, ...) {
+DLLEXPORT inline int64_t wandio_printf(iow_t *file, const char *format, ...) {
         va_list ap;
 
         va_start(ap, format);

@@ -8,8 +8,8 @@ build-amd64-debian-jessie:
   image: debian:jessie
   script:
     - ./gitlab-build.sh
-    - mkdir -p built-packages/debian_jessie/
-    - mv ../*.deb built-packages/debian_jessie/
+    - mkdir -p built-packages/jessie/
+    - mv ../*.deb built-packages/jessie/
   artifacts:
     paths:
       - built-packages/*
@@ -22,8 +22,8 @@ build-amd64-debian-stretch:
   image: debian:stretch
   script:
     - ./gitlab-build.sh
-    - mkdir -p built-packages/debian_stretch/
-    - mv ../*.deb built-packages/debian_stretch/
+    - mkdir -p built-packages/stretch/
+    - mv ../*.deb built-packages/stretch/
   artifacts:
     paths:
       - built-packages/*
@@ -36,8 +36,8 @@ build-amd64-ubuntu-xenial:
   image: ubuntu:xenial
   script:
     - ./gitlab-build.sh
-    - mkdir -p built-packages/ubuntu_xenial/
-    - mv ../*.deb built-packages/ubuntu_xenial/
+    - mkdir -p built-packages/xenial/
+    - mv ../*.deb built-packages/xenial/
   artifacts:
     paths:
       - built-packages/*
@@ -50,8 +50,8 @@ build-amd64-ubuntu-bionic:
   image: ubuntu:bionic
   script:
     - ./gitlab-build.sh
-    - mkdir -p built-packages/ubuntu_bionic/
-    - mv ../*.deb built-packages/ubuntu_bionic/
+    - mkdir -p built-packages/bionic/
+    - mv ../*.deb built-packages/bionic/
   artifacts:
     paths:
       - built-packages/*
@@ -64,8 +64,8 @@ build-amd64-ubuntu-cosmic:
   image: ubuntu:cosmic
   script:
     - ./gitlab-build.sh
-    - mkdir -p built-packages/ubuntu_cosmic/
-    - mv ../*.deb built-packages/ubuntu_cosmic/
+    - mkdir -p built-packages/cosmic/
+    - mv ../*.deb built-packages/cosmic/
   artifacts:
     paths:
       - built-packages/*
@@ -87,13 +87,13 @@ build-amd64-fedora-29:
   only:
     - tags
 
-build-amd64-fedora-28:
+build-amd64-fedora-30:
   stage: build
-  image: fedora:28
+  image: fedora:30
   script:
-    - ./gitlab-build-rpm.sh fedora28
-    - mkdir -p built-packages/fedora_28/
-    - mv ~/rpmbuild/RPMS/x86_64/*.rpm built-packages/fedora_28/
+    - ./gitlab-build-rpm.sh fedora30
+    - mkdir -p built-packages/fedora_30/
+    - mv ~/rpmbuild/RPMS/x86_64/*.rpm built-packages/fedora_30/
   artifacts:
     paths:
       - built-packages/*
@@ -133,7 +133,7 @@ run-unit-tests-ubuntu-xenial:
   stage: test
   image: ubuntu:xenial
   script:
-    - ./run-tests.sh ubuntu_xenial
+    - ./run-tests.sh xenial
   only:
     - tags
 
@@ -141,7 +141,7 @@ run-unit-tests-ubuntu-bionic:
   stage: test
   image: ubuntu:bionic
   script:
-    - ./run-tests.sh ubuntu_bionic
+    - ./run-tests.sh bionic
   only:
     - tags
 
@@ -149,7 +149,7 @@ run-unit-tests-ubuntu-cosmic:
   stage: test
   image: ubuntu:cosmic
   script:
-    - ./run-tests.sh ubuntu_cosmic
+    - ./run-tests.sh cosmic
   only:
     - tags
 
@@ -157,7 +157,7 @@ run-unit-tests-debian-stretch:
   stage: test
   image: debian:stretch
   script:
-    - ./run-tests.sh debian_stretch
+    - ./run-tests.sh stretch
   only:
     - tags
 
@@ -165,7 +165,7 @@ run-unit-tests-debian-jessie:
   stage: test
   image: debian:jessie
   script:
-    - ./run-tests.sh debian_jessie
+    - ./run-tests.sh jessie
   only:
     - tags
 
@@ -177,11 +177,11 @@ run-unit-tests-fedora-29:
   only:
     - tags
 
-run-unit-tests-fedora-28:
+run-unit-tests-fedora-30:
   stage: test
-  image: fedora:28
+  image: fedora:30
   script:
-    - ./run-tests-rpm.sh fedora_28
+    - ./run-tests-rpm.sh fedora_30
   only:
     - tags
 

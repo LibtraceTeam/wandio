@@ -64,7 +64,7 @@ struct zstd_lz4_t {
 #define DATA(io) ((struct zstd_lz4_t *)((io)->data))
 extern io_source_t zstd_lz4_source;
 
-io_t *zstd_lz4_open(io_t *parent) {
+DLLEXPORT io_t *zstd_lz4_open(io_t *parent) {
         io_t *io;
         if (!parent) {
                 return NULL;

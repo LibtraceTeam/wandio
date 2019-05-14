@@ -51,7 +51,7 @@ extern iow_source_t zlib_wsource;
 #define DATA(iow) ((struct zlibw_t *)((iow)->data))
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
-iow_t *zlib_wopen(iow_t *child, int compress_level) {
+DLLEXPORT iow_t *zlib_wopen(iow_t *child, int compress_level) {
         iow_t *iow;
         if (!child)
                 return NULL;

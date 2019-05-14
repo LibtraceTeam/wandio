@@ -51,7 +51,7 @@ extern io_source_t lzma_source;
 #define DATA(io) ((struct lzma_t *)((io)->data))
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
-io_t *lzma_open(io_t *parent) {
+DLLEXPORT io_t *lzma_open(io_t *parent) {
         io_t *io;
         if (!parent)
                 return NULL;
