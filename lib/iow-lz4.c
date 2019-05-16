@@ -44,7 +44,7 @@ struct lz4w_t {
         enum err_t err;
 #if HAVE_LIBLZ4F
         LZ4F_compressionContext_t cctx;
-        LZ4F_preferences_t *prefsPtr;
+        LZ4F_preferences_t prefs;
 #endif
         char outbuf[1024 * 1024 * 2];
         int outbuf_size_max;
@@ -72,12 +72,11 @@ DLLEXPORT iow_t *lz4_wopen(iow_t *child, int compress_level) {
         DATA(iow)->outbuf_index = 0;
 
 #if HAVE_LIBLZ4F
-        DATA(iow)->prefsPtr = malloc(sizeof(LZ4F_preferences_t));
-        DATA(iow)->prefsPtr->compressionLevel = compress_level;
+        memset(&(DATA(iow)->prefs), 0, sizeof(LZ4F_preferences_t));
+        DATA(iow)->prefs.compressionLevel = compress_level;
         LZ4F_errorCode_t result =
             LZ4F_createCompressionContext(&DATA(iow)->cctx, LZ4F_VERSION);
         if (LZ4F_isError(result)) {
-                free(DATA(iow)->prefsPtr);
                 free(iow->data);
                 free(iow);
                 fprintf(stderr, "lz4 write open failed %s\n",
@@ -87,10 +86,9 @@ DLLEXPORT iow_t *lz4_wopen(iow_t *child, int compress_level) {
 
         result =
             LZ4F_compressBegin(DATA(iow)->cctx, DATA(iow)->outbuf,
-                               sizeof(DATA(iow)->outbuf), DATA(iow)->prefsPtr);
+                               sizeof(DATA(iow)->outbuf), &(DATA(iow)->prefs));
         if (LZ4F_isError(result)) {
                 LZ4F_freeCompressionContext(DATA(iow)->cctx);
-                free(DATA(iow)->prefsPtr);
                 free(iow->data);
                 free(iow);
                 fprintf(stderr, "lz4 write open failed %s\n",
@@ -119,6 +117,7 @@ static int64_t lz4_wwrite(iow_t *iow, const char *buffer, int64_t len) {
         int inbuf_len; /* piece len */
         int inbuf_index =
             0; /* index is from begin of buffer, can spawn several pieces */
+
         while (true) {
                 if (len - inbuf_index >= DATA(iow)->outbuf_size_max) {
                         inbuf_len = DATA(iow)->outbuf_size_max;
@@ -129,7 +128,7 @@ static int64_t lz4_wwrite(iow_t *iow, const char *buffer, int64_t len) {
                 size_t upper_bound = 0, result = 0;
 #if HAVE_LIBLZ4F
                 upper_bound =
-                    LZ4F_compressBound(inbuf_len, DATA(iow)->prefsPtr);
+                    LZ4F_compressBound(inbuf_len, &(DATA(iow)->prefs));
 #endif
                 if ((size_t)upper_bound >
                     sizeof(DATA(iow)->outbuf) - DATA(iow)->outbuf_index) {
@@ -143,7 +142,14 @@ static int64_t lz4_wwrite(iow_t *iow, const char *buffer, int64_t len) {
                         assert(bytes_written == DATA(iow)->outbuf_index);
                         DATA(iow)->outbuf_index = 0;
                 }
-                assert(upper_bound <= (int64_t)sizeof(DATA(iow)->outbuf));
+
+                if (upper_bound > (int64_t)sizeof(DATA(iow)->outbuf) ||
+                                upper_bound < 0) {
+                        fprintf(stderr, "invalid upper bound calculated by lz4 library: %d\n", upper_bound);
+                        errno = EINVAL;
+                        return -1;
+                }
+
 #if HAVE_LIBLZ4F
                 result = LZ4F_compressUpdate(
                     DATA(iow)->cctx,
@@ -185,6 +191,7 @@ static int lz4_wflush(iow_t *iow) {
                 errno = EIO;
                 return -1;
         }
+        DATA(iow)->outbuf_index = 0;
 #endif
         if (result > 0) {
                 bytes_written =
@@ -227,7 +234,6 @@ static void lz4_wclose(iow_t *iow) {
         wandio_wdestroy(DATA(iow)->child);
 #if HAVE_LIBLZ4F
         LZ4F_freeCompressionContext(DATA(iow)->cctx);
-        free(DATA(iow)->prefsPtr);
 #endif
         free(iow->data);
         free(iow);

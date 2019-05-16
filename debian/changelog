@@ -1,3 +1,10 @@
+libwandio1 (4.2.1-1) unstable; urgency=medium
+
+  * Fixed bug in lz4 compression that was causing crashes and other
+    unpredictable behaviour.
+
+ -- Shane Alcock <salcock@waikato.ac.nz>  Thu, 16 May 2019 16:57:06 +1200
+
 libwandio1 (4.2.0-1) unstable; urgency=medium
 
   * Include wandio version number in the HTTP user-agent
