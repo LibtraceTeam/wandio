@@ -145,7 +145,7 @@ static int64_t lz4_wwrite(iow_t *iow, const char *buffer, int64_t len) {
 
                 if (upper_bound > (int64_t)sizeof(DATA(iow)->outbuf) ||
                                 upper_bound < 0) {
-                        fprintf(stderr, "invalid upper bound calculated by lz4 library: %d\n", upper_bound);
+                        fprintf(stderr, "invalid upper bound calculated by lz4 library: %zu\n", upper_bound);
                         errno = EINVAL;
                         return -1;
                 }
