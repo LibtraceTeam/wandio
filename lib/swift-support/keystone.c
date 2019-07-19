@@ -237,9 +237,11 @@ static jsmntok_t *process_catalog_entry(keystone_auth_token_t *token,
                       "catalog entry\n");
       goto err;
     }
-    // ensure that there is only one "object-store" catalog entry
-    assert(token->storage_url == NULL);
-    token->storage_url = strdup(urlbuf);
+    // storage_url can be overridden using environment variable, so it
+    // may already be set
+    if (token->storage_url == NULL) {
+      token->storage_url = strdup(urlbuf);
+    }
   }
 
   return t;
@@ -481,6 +483,12 @@ int keystone_authenticate(keystone_auth_creds_t *creds,
     goto err;
   }
   // this is a 201 response so the token should have been created
+
+  // check the environment in case the storage_url should be overridden
+  if (keystone_env_parse_token(token) < 0) {
+    fprintf(stderr, "ERROR: Failed to parse token information from env\n");
+    goto err;
+  }
 
   // now handle the response json
   if (process_auth_response(&rw, token) != 0) {
