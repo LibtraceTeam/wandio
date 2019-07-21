@@ -1,3 +1,11 @@
+libwandio1 (4.2.2-1) unstable; urgency=medium
+
+  * Fixed incorrect error bug in HTTP reader when using libcurl < 7.20.0
+  * Fixed bad scoping of Swift Keystone auth requests
+  * Allow users to override Swift storage URLs via 'OS_STORAGE_URL'
+
+ -- Shane Alcock <salcock@waikato.ac.nz>  Mon, 22 Jul 2019 11:07:50 +1200
+
 libwandio1 (4.2.1-1) unstable; urgency=medium
 
   * Fixed bug in lz4 compression that was causing crashes and other
