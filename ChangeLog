@@ -1,3 +1,11 @@
+Version 4.2.2
+=============
+Thanks to Alistair King and Mingwei Zhang for the fixes in this release
+
+ * Fixed incorrect error bug in HTTP reader when using libcurl < 7.20.0
+ * Fixed bad scoping of Swift Keystone auth requests
+ * Allow users to override Swift storage URLs via 'OS_STORAGE_URL'
+
 Version 4.2.1
 =============
  * Fixed crashes / wacky behaviour when writing lz4 compressed output.

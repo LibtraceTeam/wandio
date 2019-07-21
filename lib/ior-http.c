@@ -186,9 +186,11 @@ static int fill_buffer(io_t *io) {
                         nanosleep(&req, &rem);
                 }
                 curl_easy_pause(DATA(io)->curl, CURLPAUSE_CONT);
-                if (curl_multi_perform(DATA(io)->multi, &n_running) !=
-                    CURLM_OK) {
-                  return -1;
+                do {
+                        rc = curl_multi_perform(DATA(io)->multi, &n_running);
+                } while (rc == CURLM_CALL_MULTI_PERFORM);
+                if (rc != CURLM_OK) {
+                        return -1;
                 }
                 if (DATA(io)->total_length < 0) {
                         // update file length.

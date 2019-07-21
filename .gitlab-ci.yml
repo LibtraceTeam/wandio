@@ -31,6 +31,20 @@ build-amd64-debian-stretch:
   only:
     - tags
 
+build-amd64-debian-buster:
+  stage: build
+  image: debian:buster
+  script:
+    - ./gitlab-build.sh
+    - mkdir -p built-packages/buster/
+    - mv ../*.deb built-packages/buster/
+  artifacts:
+    paths:
+      - built-packages/*
+    expire_in: 1 day
+  only:
+    - tags
+
 build-amd64-ubuntu-xenial:
   stage: build
   image: ubuntu:xenial
@@ -66,6 +80,20 @@ build-amd64-ubuntu-cosmic:
     - ./gitlab-build.sh
     - mkdir -p built-packages/cosmic/
     - mv ../*.deb built-packages/cosmic/
+  artifacts:
+    paths:
+      - built-packages/*
+    expire_in: 1 day
+  only:
+    - tags
+
+build-amd64-ubuntu-disco:
+  stage: build
+  image: ubuntu:disco
+  script:
+    - ./gitlab-build.sh
+    - mkdir -p built-packages/disco/
+    - mv ../*.deb built-packages/disco/
   artifacts:
     paths:
       - built-packages/*
@@ -153,6 +181,14 @@ run-unit-tests-ubuntu-cosmic:
   only:
     - tags
 
+run-unit-tests-ubuntu-disco:
+  stage: test
+  image: ubuntu:disco
+  script:
+    - ./run-tests.sh disco
+  only:
+    - tags
+
 run-unit-tests-debian-stretch:
   stage: test
   image: debian:stretch
@@ -166,6 +202,14 @@ run-unit-tests-debian-jessie:
   image: debian:jessie
   script:
     - ./run-tests.sh jessie
+  only:
+    - tags
+
+run-unit-tests-debian-buster:
+  stage: test
+  image: debian:buster
+  script:
+    - ./run-tests.sh buster
   only:
     - tags
 
