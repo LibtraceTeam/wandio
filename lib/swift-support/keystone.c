@@ -70,6 +70,12 @@
   "          \"password\": \"%s\""                \
   "        }"                                     \
   "      }"                                       \
+  "    },"                                        \
+  "    \"scope\": {"                              \
+  "      \"project\": {"                          \
+  "        \"domain\": { \"id\": \"%s\" },"       \
+  "        \"name\": \"%s\""                      \
+  "      }"                                       \
   "    }"                                         \
   "  }"                                           \
   "}"
@@ -429,7 +435,8 @@ int keystone_authenticate(keystone_auth_creds_t *creds,
   headers = curl_slist_append(headers, "Content-Type: application/json");
 
   if ((buf_len = snprintf(buf, sizeof(buf), AUTH_REQ_TMPL, creds->username,
-                          creds->domain_id, creds->password)) >= BUFLEN) {
+                          creds->domain_id, creds->password,
+                          creds->domain_id, creds->project)) >= BUFLEN) {
     goto err;
   }
 
