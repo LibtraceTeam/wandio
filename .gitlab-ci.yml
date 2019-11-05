@@ -143,6 +143,20 @@ build-amd64-fedora-30:
   only:
     - tags
 
+build-amd64-fedora-31:
+  stage: build
+  image: fedora:31
+  script:
+    - ./gitlab-build-rpm.sh fedora31
+    - mkdir -p built-packages/fedora_31/
+    - mv ~/rpmbuild/RPMS/x86_64/*.rpm built-packages/fedora_31/
+  artifacts:
+    paths:
+      - built-packages/*
+    expire_in: 1 day
+  only:
+    - tags
+
 build-amd64-centos8:
   stage: build
   image: centos:8
