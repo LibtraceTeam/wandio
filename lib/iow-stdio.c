@@ -120,7 +120,7 @@ DLLEXPORT iow_t *stdio_wopen(const char *filename, int flags) {
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #define max(a, b) ((a) > (b) ? (a) : (b))
 /* Round A Down to the nearest multiple of B */
-#define rounddown(a, b) ((a)-((a)%b)
+#define rounddown(a, b) ((a)-((a)%b))
 
 /* When doing directio (O_DIRECT) we need to make sure that we write multiples
  * of MIN_WRITE_SIZE. So we accumulate data into DATA(iow)->buffer, and write it
