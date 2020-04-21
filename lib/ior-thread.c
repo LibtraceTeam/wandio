@@ -205,7 +205,7 @@ DLLEXPORT io_t *thread_open(io_t *parent) {
         for (i = 0; i < max_buffers; i++) {
 #if _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
                 if (posix_memalign((void **)&(DATA(state)->buffer[i].space),
-                               4096, WANDIO_BUFFER_SIZE) < 0) {
+                               4096, WANDIO_BUFFER_SIZE) != 0) {
                         thread_close(state);
                         return NULL;
                 }
