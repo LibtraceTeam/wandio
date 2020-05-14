@@ -201,27 +201,19 @@ run-unit-tests-ubuntu-bionic:
   only:
     - tags
 
-run-unit-tests-ubuntu-cosmic:
-  stage: test
-  image: ubuntu:cosmic
-  script:
-    - ./run-tests.sh cosmic
-  only:
-    - tags
-
-run-unit-tests-ubuntu-disco:
-  stage: test
-  image: ubuntu:disco
-  script:
-    - ./run-tests.sh disco
-  only:
-    - tags
-
 run-unit-tests-ubuntu-eoan:
   stage: test
   image: ubuntu:eoan
   script:
     - ./run-tests.sh eoan
+  only:
+    - tags
+
+run-unit-tests-ubuntu-focal:
+  stage: test
+  image: ubuntu:focal
+  script:
+    - ./run-tests.sh focal
   only:
     - tags
 
@@ -265,11 +257,19 @@ run-unit-tests-fedora-30:
   only:
     - tags
 
-run-unit-tests-centos-6:
+run-unit-tests-fedora-31:
   stage: test
-  image: centos:6
+  image: fedora:31
   script:
-    - ./run-tests-rpm.sh centos_6
+    - ./run-tests-rpm.sh fedora_31
+  only:
+    - tags
+
+run-unit-tests-fedora-32:
+  stage: test
+  image: fedora:32
+  script:
+    - ./run-tests-rpm.sh fedora_32
   only:
     - tags
 
