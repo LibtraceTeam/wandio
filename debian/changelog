@@ -1,3 +1,12 @@
+libwandio1 (4.2.3-1) unstable; urgency=medium
+
+  * Fix segfault when wandio_wflush() is called with a NULL IO handle
+  * HTTP: return approriate error code when curl fails an HTTP request
+  * HTTP: use TCP keep-alives to prevent long-running sessions from
+    hanging.
+
+ -- Shane Alcock <salcock@waikato.ac.nz>  Thu, 14 May 2020 17:31:17 +1200
+
 libwandio1 (4.2.2-1) unstable; urgency=medium
 
   * Fixed incorrect error bug in HTTP reader when using libcurl < 7.20.0

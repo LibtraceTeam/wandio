@@ -1,3 +1,11 @@
+Version 4.2.3
+=============
+Thanks to Mingwei Zhang for some of the fixes in this release
+
+ * Fix segfault when wandio_wflush() is called with a NULL IO handle
+ * HTTP: return approriate error code when curl fails an HTTP request
+ * HTTP: use TCP keep-alives to prevent long-running sessions from hanging.
+
 Version 4.2.2
 =============
 Thanks to Alistair King and Mingwei Zhang for the fixes in this release
