@@ -300,6 +300,7 @@ io_t *init_io(io_t *io) {
         curl_easy_setopt(DATA(io)->curl, CURLOPT_SSL_VERIFYHOST, 1L);
         curl_easy_setopt(DATA(io)->curl, CURLOPT_FOLLOWLOCATION, 1L);
         curl_easy_setopt(DATA(io)->curl, CURLOPT_FAILONERROR, 1L);
+        curl_easy_setopt(DATA(io)->curl, CURLOPT_TCP_KEEPALIVE, 1L);
         curl_easy_setopt(DATA(io)->curl, CURLOPT_USERAGENT, "wandio/"PACKAGE_VERSION);
 
         /* for remote files, the buffer set to 2*CURL_MAX_WRITE_SIZE */
