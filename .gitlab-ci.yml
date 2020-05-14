@@ -185,20 +185,6 @@ build-amd64-centos7:
   only:
     - tags
 
-build-amd64-centos6:
-  stage: build
-  image: centos:6
-  script:
-    - ./gitlab-build-rpm.sh centos6
-    - mkdir -p built-packages/centos_6/
-    - mv ~/rpmbuild/RPMS/x86_64/*.rpm built-packages/centos_6/
-  artifacts:
-    paths:
-      - built-packages/*
-    expire_in: 1 day
-  only:
-    - tags
-
 run-unit-tests-ubuntu-xenial:
   stage: test
   image: ubuntu:xenial
