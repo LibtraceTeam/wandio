@@ -474,7 +474,12 @@ DLLEXPORT int64_t wandio_wwrite(iow_t *iow, const void *buffer, int64_t len) {
 }
 
 DLLEXPORT int wandio_wflush(iow_t *iow) {
-        return iow->source->flush(iow);
+        if (iow) {
+                return iow->source->flush(iow);
+        }
+        fprintf(stderr,
+                "wandio: wflush has been called on a NULL iow handle.\n");
+        return -1;
 }
 
 DLLEXPORT void wandio_wdestroy(iow_t *iow) {

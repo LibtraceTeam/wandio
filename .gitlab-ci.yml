@@ -31,6 +31,20 @@ build-amd64-debian-stretch:
   only:
     - tags
 
+build-amd64-debian-buster:
+  stage: build
+  image: debian:buster
+  script:
+    - ./gitlab-build.sh
+    - mkdir -p built-packages/buster/
+    - mv ../*.deb built-packages/buster/
+  artifacts:
+    paths:
+      - built-packages/*
+    expire_in: 1 day
+  only:
+    - tags
+
 build-amd64-ubuntu-xenial:
   stage: build
   image: ubuntu:xenial
@@ -59,13 +73,27 @@ build-amd64-ubuntu-bionic:
   only:
     - tags
 
-build-amd64-ubuntu-cosmic:
+build-amd64-ubuntu-eoan:
   stage: build
-  image: ubuntu:cosmic
+  image: ubuntu:eoan
   script:
     - ./gitlab-build.sh
-    - mkdir -p built-packages/cosmic/
-    - mv ../*.deb built-packages/cosmic/
+    - mkdir -p built-packages/eoan/
+    - mv ../*.deb built-packages/eoan/
+  artifacts:
+    paths:
+      - built-packages/*
+    expire_in: 1 day
+  only:
+    - tags
+
+build-amd64-ubuntu-focal:
+  stage: build
+  image: ubuntu:focal
+  script:
+    - ./gitlab-build.sh
+    - mkdir -p built-packages/focal/
+    - mv ../*.deb built-packages/focal/
   artifacts:
     paths:
       - built-packages/*
@@ -94,6 +122,48 @@ build-amd64-fedora-30:
     - ./gitlab-build-rpm.sh fedora30
     - mkdir -p built-packages/fedora_30/
     - mv ~/rpmbuild/RPMS/x86_64/*.rpm built-packages/fedora_30/
+  artifacts:
+    paths:
+      - built-packages/*
+    expire_in: 1 day
+  only:
+    - tags
+
+build-amd64-fedora-31:
+  stage: build
+  image: fedora:31
+  script:
+    - ./gitlab-build-rpm.sh fedora31
+    - mkdir -p built-packages/fedora_31/
+    - mv ~/rpmbuild/RPMS/x86_64/*.rpm built-packages/fedora_31/
+  artifacts:
+    paths:
+      - built-packages/*
+    expire_in: 1 day
+  only:
+    - tags
+
+build-amd64-fedora-32:
+  stage: build
+  image: fedora:32
+  script:
+    - ./gitlab-build-rpm.sh fedora32
+    - mkdir -p built-packages/fedora_32/
+    - mv ~/rpmbuild/RPMS/x86_64/*.rpm built-packages/fedora_32/
+  artifacts:
+    paths:
+      - built-packages/*
+    expire_in: 1 day
+  only:
+    - tags
+
+build-amd64-centos8:
+  stage: build
+  image: centos:8
+  script:
+    - ./gitlab-build-rpm.sh centos8
+    - mkdir -p built-packages/centos_8/
+    - mv ~/rpmbuild/RPMS/x86_64/*.rpm built-packages/centos_8/
   artifacts:
     paths:
       - built-packages/*
@@ -153,6 +223,22 @@ run-unit-tests-ubuntu-cosmic:
   only:
     - tags
 
+run-unit-tests-ubuntu-disco:
+  stage: test
+  image: ubuntu:disco
+  script:
+    - ./run-tests.sh disco
+  only:
+    - tags
+
+run-unit-tests-ubuntu-eoan:
+  stage: test
+  image: ubuntu:eoan
+  script:
+    - ./run-tests.sh eoan
+  only:
+    - tags
+
 run-unit-tests-debian-stretch:
   stage: test
   image: debian:stretch
@@ -166,6 +252,14 @@ run-unit-tests-debian-jessie:
   image: debian:jessie
   script:
     - ./run-tests.sh jessie
+  only:
+    - tags
+
+run-unit-tests-debian-buster:
+  stage: test
+  image: debian:buster
+  script:
+    - ./run-tests.sh buster
   only:
     - tags
 
@@ -198,6 +292,14 @@ run-unit-tests-centos-7:
   image: centos:7
   script:
     - ./run-tests-rpm.sh centos_7
+  only:
+    - tags
+
+run-unit-tests-centos-8:
+  stage: test
+  image: centos:8
+  script:
+    - ./run-tests-rpm.sh centos_8
   only:
     - tags
 

@@ -152,6 +152,32 @@ static void *thread_producer(void *userdata) {
         return NULL;
 }
 
+static void thread_close(io_t *io) {
+        unsigned int i;
+        pthread_mutex_lock(&DATA(io)->mutex);
+        DATA(io)->closing = true;
+        pthread_cond_signal(&DATA(io)->space_avail);
+        pthread_mutex_unlock(&DATA(io)->mutex);
+
+        /* Wait for the thread to exit */
+        if (DATA(io)->producer != 0) {
+                pthread_join(DATA(io)->producer, NULL);
+        }
+
+        pthread_mutex_destroy(&DATA(io)->mutex);
+        pthread_cond_destroy(&DATA(io)->space_avail);
+        pthread_cond_destroy(&DATA(io)->data_ready);
+
+        for (i = 0; i < max_buffers; i++) {
+                if (DATA(io)->buffer[i].space) {
+                        free(DATA(io)->buffer[i].space);
+                }
+        }
+        free(DATA(io)->buffer);
+        free(DATA(io));
+        free(io);
+}
+
 DLLEXPORT io_t *thread_open(io_t *parent) {
         io_t *state;
         sigset_t set;
@@ -167,23 +193,28 @@ DLLEXPORT io_t *thread_open(io_t *parent) {
         state->data = calloc(1, sizeof(struct state_t));
         state->source = &thread_source;
 
+        pthread_mutex_init(&DATA(state)->mutex, NULL);
+        pthread_cond_init(&DATA(state)->data_ready, NULL);
+        pthread_cond_init(&DATA(state)->space_avail, NULL);
+
+        DATA(state)->producer = 0;
         DATA(state)->buffer =
             (struct buffer_t *)malloc(sizeof(struct buffer_t) * max_buffers);
         memset(DATA(state)->buffer, 0, sizeof(struct buffer_t) * max_buffers);
 
         for (i = 0; i < max_buffers; i++) {
 #if _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
-                posix_memalign((void **)&(DATA(state)->buffer[i].space), 4096,
-                               WANDIO_BUFFER_SIZE);
+                if (posix_memalign((void **)&(DATA(state)->buffer[i].space),
+                               4096, WANDIO_BUFFER_SIZE) != 0) {
+                        thread_close(state);
+                        return NULL;
+                }
 #else
                 DATA(state)->buffer[i].space = calloc(1, WANDIO_BUFFER_SIZE);
 #endif
         }
         DATA(state)->in_buffer = 0;
         DATA(state)->offset = 0;
-        pthread_mutex_init(&DATA(state)->mutex, NULL);
-        pthread_cond_init(&DATA(state)->data_ready, NULL);
-        pthread_cond_init(&DATA(state)->space_avail, NULL);
 
         DATA(state)->io = parent;
         DATA(state)->closing = false;
@@ -262,28 +293,6 @@ static int64_t thread_read(io_t *state, void *buffer, int64_t len) {
                 DATA(state)->in_buffer = newbuffer;
         }
         return copied;
-}
-
-static void thread_close(io_t *io) {
-        unsigned int i;
-        pthread_mutex_lock(&DATA(io)->mutex);
-        DATA(io)->closing = true;
-        pthread_cond_signal(&DATA(io)->space_avail);
-        pthread_mutex_unlock(&DATA(io)->mutex);
-
-        /* Wait for the thread to exit */
-        pthread_join(DATA(io)->producer, NULL);
-
-        pthread_mutex_destroy(&DATA(io)->mutex);
-        pthread_cond_destroy(&DATA(io)->space_avail);
-        pthread_cond_destroy(&DATA(io)->data_ready);
-
-        for (i = 0; i < max_buffers; i++) {
-                free(DATA(io)->buffer[i].space);
-        }
-        free(DATA(io)->buffer);
-        free(DATA(io));
-        free(io);
 }
 
 io_source_t thread_source = {"thread",    thread_read, NULL, /* peek */

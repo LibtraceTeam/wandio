@@ -186,9 +186,11 @@ static int fill_buffer(io_t *io) {
                         nanosleep(&req, &rem);
                 }
                 curl_easy_pause(DATA(io)->curl, CURLPAUSE_CONT);
-                if (curl_multi_perform(DATA(io)->multi, &n_running) !=
-                    CURLM_OK) {
-                  return -1;
+                do {
+                        rc = curl_multi_perform(DATA(io)->multi, &n_running);
+                } while (rc == CURLM_CALL_MULTI_PERFORM);
+                if (rc != CURLM_OK) {
+                        return -1;
                 }
                 if (DATA(io)->total_length < 0) {
                         // update file length.
@@ -297,6 +299,8 @@ io_t *init_io(io_t *io) {
         curl_easy_setopt(DATA(io)->curl, CURLOPT_SSL_VERIFYPEER, 1L);
         curl_easy_setopt(DATA(io)->curl, CURLOPT_SSL_VERIFYHOST, 1L);
         curl_easy_setopt(DATA(io)->curl, CURLOPT_FOLLOWLOCATION, 1L);
+        curl_easy_setopt(DATA(io)->curl, CURLOPT_FAILONERROR, 1L);
+        curl_easy_setopt(DATA(io)->curl, CURLOPT_TCP_KEEPALIVE, 1L);
         curl_easy_setopt(DATA(io)->curl, CURLOPT_USERAGENT, "wandio/"PACKAGE_VERSION);
 
         /* for remote files, the buffer set to 2*CURL_MAX_WRITE_SIZE */
