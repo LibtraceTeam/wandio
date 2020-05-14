@@ -14,6 +14,7 @@ if [ "$1" = "centos8" ]; then
         # XXX Temporary, until Centos updates to 8.2 where libzstd is
         # included in the base OS
         # ref: https://lists.fedoraproject.org/archives/list/epel-devel@lists.fedoraproject.org/thread/MFZCRQCULJALRIJJFSSAETSDZ4RL6GCU/
+        yum install -y wget
         wget -N https://archives.fedoraproject.org/pub/archive/epel/8.1/Everything/x86_64/Packages/l/libzstd-1.4.4-1.el8.x86_64.rpm && rpm -i libzstd-1.4.4-1.el8.x86_64.rpm
 
         wget -N https://archives.fedoraproject.org/pub/archive/epel/8.1/Everything/x86_64/Packages/l/libzstd-devel-1.4.4-1.el8.x86_64.rpm && rpm -i libzstd-devel-1.4.4-1.el8.x86_64.rpm
