@@ -16,6 +16,9 @@ if [ "$1" = "centos8" ]; then
         wget -N https://archives.fedoraproject.org/pub/archive/epel/8.1/Everything/x86_64/Packages/l/libzstd-1.4.4-1.el8.x86_64.rpm && rpm -i libzstd-1.4.4-1.el8.x86_64.rpm
 
         wget -N https://archives.fedoraproject.org/pub/archive/epel/8.1/Everything/x86_64/Packages/l/libzstd-devel-1.4.4-1.el8.x86_64.rpm && rpm -i libzstd-devel-1.4.4-1.el8.x86_64.rpm
+
+        wget -N https://archives.fedoraproject.org/pub/archive/epel/8.1/Everything/x86_64/Packages/z/zstd-1.4.4-1.el8.x86_64.rpm && rpm -i zstd-1.4.4-1.el8.x86_64.rpm
+
 fi
 
 if [ "$1" = "centos_7" ]; then
