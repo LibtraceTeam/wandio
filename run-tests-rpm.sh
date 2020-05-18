@@ -4,7 +4,7 @@ set -x -e -o pipefail
 SOURCENAME=`echo ${CI_COMMIT_REF_NAME} | cut -d '-' -f 1`
 ZSTDREQ=zstd
 
-if [ "$1" = "centos8" ]; then
+if [ "$1" = "centos_8" ]; then
         yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
 
         dnf install -y 'dnf-command(config-manager)' || true
