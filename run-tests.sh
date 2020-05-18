@@ -2,6 +2,8 @@
 
 set -x -e -o pipefail
 
+export DEBIAN_FRONTEND=noninteractive
+
 apt-get update
 
 apt-get install -y curl apt-transport-https \
