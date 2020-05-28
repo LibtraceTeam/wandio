@@ -35,6 +35,10 @@ jobs:
           export DIRNAME=`echo ${{ matrix.target }} | tr ':' '_'`
           mkdir -p packages/${DIRNAME}
           cp ../*.deb packages/${DIRNAME}/
+      - name: Run tests
+        run: |
+          export DIRNAME=`echo ${{ matrix.target }} | tr ':' '_'`
+          ./run-tests.sh ${DIRNAME}
       - name: Publish packages to bintray
         uses: wanduow/action-bintray-upload-debian-packages@v1
         with:

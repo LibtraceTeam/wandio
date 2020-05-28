@@ -34,6 +34,10 @@ jobs:
           export DIRNAME=`echo ${{ matrix.target }} | tr ':' '_'`
           mkdir -p packages/${DIRNAME}
           cp ~/rpmbuild/RPMS/x86_64/*.rpm packages/${DIRNAME}/
+      - name: Run tests
+        run: |
+          export DIRNAME=`echo ${{ matrix.target }} | tr ':' '_'`
+          ./run-tests-rpm.sh ${DIRNAME}
       - name: Publish packages to bintray
         uses: wanduow/action-bintray-upload-rpm-packages@v1
         with:
