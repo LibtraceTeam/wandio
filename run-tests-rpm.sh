@@ -21,7 +21,7 @@ if [ "$1" = "centos_8" ]; then
 fi
 
 if [ "$1" = "centos_7" ]; then
-        yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+        yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm || true
 fi
 
 yum install -y xz ${ZSTDREQ} gzip bzip2 lzop lz4 diffutils
