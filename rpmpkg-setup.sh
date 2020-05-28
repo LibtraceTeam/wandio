@@ -1,0 +1,60 @@
+#!/bin/bash
+set -x -e -o pipefail
+
+
+DISTRO=fedora
+if [ "$1" = "centos:8" ]; then
+        DISTRO=centos
+fi
+
+if [ "$1" = "centos:7" ]; then
+        DISTRO=centos
+fi
+
+mkdir -p /run/user/${UID}
+chmod 0700 /run/user/${UID}
+yum install -y wget make gcc
+
+cat << EOF > /etc/yum.repos.d/bintray-wand-general-rpm.repo
+#bintray-wand-general-rpm - packages by wand from Bintray
+[bintray-wand-general-rpm]
+name=bintray-wand-general-rpm
+baseurl=https://dl.bintray.com/wand/general-rpm/${DISTRO}/\$releasever/\$basearch/
+gpgkey=https://bintray.com/user/downloadSubjectPublicKey?username=wand
+gpgcheck=0
+repo_gpgcheck=1
+enabled=1
+EOF
+
+yum update -y
+
+
+if [ "$1" = "centos:8" ]; then
+        yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm || true
+        dnf install -y 'dnf-command(config-manager)' || true
+        yum config-manager --set-enabled PowerTools || true
+
+	# XXX Temporary, until Centos updates to 8.2 where libzstd is
+        # included in the base OS
+        # ref: https://lists.fedoraproject.org/archives/list/epel-devel@lists.fedoraproject.org/thread/MFZCRQCULJALRIJJFSSAETSDZ4RL6GCU/
+        yum install -y wget pkgconf-pkg-config
+        wget -N https://archives.fedoraproject.org/pub/archive/epel/8.1/Everything/x86_64/Packages/l/libzstd-1.4.4-1.el8.x86_64.rpm && rpm -i libzstd-1.4.4-1.el8.x86_64.rpm
+        wget -N https://archives.fedoraproject.org/pub/archive/epel/8.1/Everything/x86_64/Packages/l/libzstd-devel-1.4.4-1.el8.x86_64.rpm && rpm -i libzstd-devel-1.4.4-1.el8.x86_64.rpm
+
+fi
+
+if [ "$1" = "centos:7" ]; then
+        yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm || true
+fi
+
+if [[ "$1" =~ fedora* ]]; then
+        dnf install -y rpm-build rpmdevtools 'dnf-command(builddep)' which
+        dnf group install -y "C Development Tools and Libraries"
+        dnf builddep -y rpm/libtrace4.spec
+else
+        yum install -y rpm-build yum-utils rpmdevtools which
+        yum groupinstall -y 'Development Tools'
+        yum-builddep -y rpm/libtrace4.spec
+fi
+
+rpmdev-setuptree
