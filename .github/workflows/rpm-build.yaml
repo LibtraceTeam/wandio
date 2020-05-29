@@ -38,6 +38,13 @@ jobs:
         run: |
           export DIRNAME=`echo ${{ matrix.target }} | tr ':' '_'`
           ./run-tests-rpm.sh ${DIRNAME}
+      - name: Publish packages to cloudsmith
+        uses: salcock/action-cloudsmith-upload-packages@v1
+        with:
+          path: packages/
+          repo: ${{ secrets.CLOUDSMITH_OWNER }}/libwandio
+          username: salcock
+          api_key: ${{ secrets.CLOUDSMITH_API_KEY }}
       - name: Publish packages to bintray
         uses: wanduow/action-bintray-upload-rpm-packages@v1
         with:
