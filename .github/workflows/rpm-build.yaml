@@ -39,7 +39,7 @@ jobs:
           export DIRNAME=`echo ${{ matrix.target }} | tr ':' '_'`
           ./run-tests-rpm.sh ${DIRNAME}
       - name: Publish packages to cloudsmith
-        uses: salcock/action-cloudsmith-upload-packages@v1
+        uses: wanduow/action-cloudsmith-upload-packages@v1
         with:
           path: packages/
           repo: ${{ secrets.CLOUDSMITH_OWNER }}/libwandio
