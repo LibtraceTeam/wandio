@@ -13,12 +13,7 @@ apt-get install -y equivs devscripts dpkg-dev quilt curl apt-transport-https \
     apt-utils ssl-cert ca-certificates gnupg lsb-release debhelper git \
     pkg-config
 
-DISTRO=$(lsb_release -sc)
-
-echo "deb https://dl.bintray.com/wand/general ${DISTRO} main" | \
-    tee -a /etc/apt/sources.list.d/wand.list
-curl --silent "https://bintray.com/user/downloadSubjectPublicKey?username=wand"\
-    | apt-key add -
+curl -1sLf 'https://dl.cloudsmith.io/public/wand/libwandio/cfg/setup/bash.deb.sh' | bash
 
 apt-get update
 apt-get upgrade -y
