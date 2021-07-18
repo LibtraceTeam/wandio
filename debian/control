@@ -1,7 +1,8 @@
 Source: libwandio1
 Priority: optional
 Maintainer: Shane Alcock <shane.alcock@waikato.ac.nz>
-Build-Depends: debhelper (>= 12~), dh-autoreconf,
+Build-Depends: debhelper-compat (= 12),
+ dh-autoreconf,
  zlib1g-dev, liblzma-dev, libbz2-dev,
  liblzo2-dev,  libcurl4-openssl-dev, liblz4-dev (>= 0.0~r131),
  libzstd1-dev | libzstd-dev (>= 1)
