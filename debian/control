@@ -11,7 +11,6 @@ Section: libs
 Homepage: https://research.wand.net.nz/software/libwandio.php
 
 Package: wandio1-tools
-Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Provides: wandio-tools
@@ -29,7 +28,6 @@ Description: example tools for the libwandio library
  University, New Zealand.
 
 Package: libwandio1
-Section: libs
 Architecture: any
 Multi-Arch: same
 Depends: ${shlibs:Depends}, ${misc:Depends}
