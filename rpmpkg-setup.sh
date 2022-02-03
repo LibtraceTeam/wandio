@@ -12,12 +12,12 @@ curl -1sLf \
 
 yum update -y
 
-if [ "$1" = "rocky*" ]; then
+if [ "$1" =~ "rocky*" ]; then
         dnf install dnf-plugins-core epel-release || true
         dnf config-manager --set-enabled PowerTools || true
 fi
 
-if [ "$1" = "alma*" ]; then
+if [ "$1" =~ "alma*" ]; then
         dnf install dnf-plugins-core epel-release || true
         dnf config-manager --set-enabled PowerTools || true
 fi
