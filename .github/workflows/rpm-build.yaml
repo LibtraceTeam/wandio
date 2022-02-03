@@ -17,9 +17,10 @@ jobs:
           - amd64
         target:
           - "centos:7"
-          - "centos:8"
-          - "fedora:33"
+          - "fedora:35"
           - "fedora:34"
+          - "rockylinux:8.5"
+          - "almalinux:8.5"
 
 
     steps:
@@ -45,12 +46,4 @@ jobs:
           repo: ${{ secrets.CLOUDSMITH_OWNER }}/libwandio
           username: salcock
           api_key: ${{ secrets.CLOUDSMITH_API_KEY }}
-      - name: Publish packages to bintray
-        uses: wanduow/action-bintray-upload-rpm-packages@v1
-        with:
-          path: packages/
-          repo: ${{ secrets.BINTRAY_OWNER }}/general-rpm
-          license: LGPL-3.0
-          username: salcock
-          api_key: ${{ secrets.BINTRAY_API_KEY }}
 
