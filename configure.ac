@@ -260,7 +260,7 @@ AC_ARG_WITH([lz4],
 AS_IF([test "x$with_lz4" != "xno"],
         [
         AC_CHECK_LIB(lz4, LZ4F_createDecompressionContext, have_lz4f=yes, have_lz4f=no)
-        ], [have_zstd=no])
+        ], [have_lz4f=no])
 
 AS_IF([test "x$have_lz4f" = "xyes"], [
         if test "$ac_cv_lib_lz4_code" != "none required"; then
