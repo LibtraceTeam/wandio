@@ -244,7 +244,7 @@ static int fill_buffer(io_t *io) {
 
 DLLEXPORT io_t *http_open_hdrs(const char *filename, char **hdrs, int hdrs_cnt)
 {
-        io_t *io = malloc(sizeof(io_t));
+        io_t *io = calloc(1, sizeof(io_t));
         if (!io)
                 return NULL;
         io->data = calloc(sizeof(struct http_t), 1);
@@ -256,6 +256,9 @@ DLLEXPORT io_t *http_open_hdrs(const char *filename, char **hdrs, int hdrs_cnt)
         /* set url */
         DATA(io)->url = filename;
         DATA(io)->total_length = -1;
+        DATA(io)->multi = NULL;
+        DATA(io)->curl = NULL;
+
         if (!init_io(io)) {
                 return NULL;
         }
@@ -288,6 +291,19 @@ io_t *init_io(io_t *io) {
         io->source = &http_source;
 
         curl_helper_safe_global_init();
+
+        // if we are being re-initialized, make sure we clean up
+        // any existing curl handles
+        if (DATA(io)->curl) {
+                if (DATA(io)->multi) {
+                        curl_multi_remove_handle(DATA(io)->multi,
+                                DATA(io)->curl);
+                }
+                curl_easy_cleanup(DATA(io)->curl);
+        }
+        if (DATA(io)->multi) {
+                curl_multi_cleanup(DATA(io)->multi);
+        }
 
         DATA(io)->multi = curl_multi_init();
         DATA(io)->curl = curl_easy_init();
