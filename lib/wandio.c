@@ -558,6 +558,7 @@ DLLEXPORT int wandio_detect_compression_type(const char *filename) {
                 if (strcmp(ptr, WANDIO_BZ2_SUFFIX) == 0) {
                         return WANDIO_COMPRESS_BZ2;
                 }
+                ptr = filename;
         }
 
         if (len >= strlen(WANDIO_LZMA_SUFFIX)) {
@@ -566,6 +567,7 @@ DLLEXPORT int wandio_detect_compression_type(const char *filename) {
                 if (strcmp(ptr, WANDIO_LZMA_SUFFIX) == 0) {
                         return WANDIO_COMPRESS_LZMA;
                 }
+                ptr = filename;
         }
 
         if (len >= strlen(WANDIO_LZO_SUFFIX)) {
@@ -574,6 +576,7 @@ DLLEXPORT int wandio_detect_compression_type(const char *filename) {
                 if (strcmp(ptr, WANDIO_LZO_SUFFIX) == 0) {
                         return WANDIO_COMPRESS_LZO;
                 }
+                ptr = filename;
         }
 
         if (len >= strlen(WANDIO_LZ4_SUFFIX)) {
@@ -582,6 +585,7 @@ DLLEXPORT int wandio_detect_compression_type(const char *filename) {
                 if (strcmp(ptr, WANDIO_LZ4_SUFFIX) == 0) {
                         return WANDIO_COMPRESS_LZ4;
                 }
+                ptr = filename;
         }
 
         if (len >= strlen(WANDIO_ZSTD_SUFFIX)) {
@@ -590,6 +594,7 @@ DLLEXPORT int wandio_detect_compression_type(const char *filename) {
                 if (strcmp(ptr, WANDIO_ZSTD_SUFFIX) == 0) {
                         return WANDIO_COMPRESS_ZSTD;
                 }
+                ptr = filename;
         }
 
         /* this is a suffix we don't know. don't compress */
