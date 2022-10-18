@@ -42,6 +42,7 @@
 #include <unistd.h>
 #include "curl-helper.h"
 #include "wandio.h"
+#include "wandio_internal.h"
 
 /* Libwandio IO module implementing an HTTP reader (using libcurl)
  */
@@ -209,6 +210,16 @@ static int fill_buffer(io_t *io) {
           int msgq = 0;
           m = curl_multi_info_read(DATA(io)->multi, &msgq);
           if (m != NULL && m->data.result != CURLE_OK) {
+            if (loghttpservererrors == 0) {
+                // server-side disconnects may not be helpful to log,
+                // especially if the client is going to retry
+                if (m->data.result == CURLE_PARTIAL_FILE) {
+                    return -1;
+                }
+                if (m->data.result == CURLE_RECV_ERROR) {
+                    return -1;
+                }
+            }
             // there was an error reading -- if this is the first
             // read, then the wandio_create call will fail.
             fprintf(stderr, "HTTP ERROR: %s (%d)\n",
