@@ -107,10 +107,6 @@ AC_PROG_GCC_TRADITIONAL
 
 AC_CHECK_SIZEOF([long int])
 
-
-AC_CHECK_INCLUDES_DEFAULT
-AC_PROG_EGREP
-
 AC_CHECK_HEADERS(stddef.h inttypes.h sys/prctl.h)
 
 # Checks for various "optional" libraries
