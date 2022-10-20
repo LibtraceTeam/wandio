@@ -210,6 +210,7 @@ static int fill_buffer(io_t *io) {
           int msgq = 0;
           m = curl_multi_info_read(DATA(io)->multi, &msgq);
           if (m != NULL && m->data.result != CURLE_OK) {
+            struct timeval tv;
             if (loghttpservererrors == 0) {
                 // server-side disconnects may not be helpful to log,
                 // especially if the client is going to retry
@@ -220,9 +221,10 @@ static int fill_buffer(io_t *io) {
                     return -1;
                 }
             }
+            gettimeofday(&tv, NULL);
             // there was an error reading -- if this is the first
             // read, then the wandio_create call will fail.
-            fprintf(stderr, "HTTP ERROR: %s (%d)\n",
+            fprintf(stderr, "%u HTTP ERROR: %s (%d)\n", tv.tv_sec,
                     curl_easy_strerror(m->data.result),
                     m->data.result);
             return -1;
