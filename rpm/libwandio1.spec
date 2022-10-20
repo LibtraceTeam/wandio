@@ -1,11 +1,11 @@
 Name:           libwandio1
-Version:        4.2.3
+Version:        4.2.4
 Release:        1%{?dist}
 Summary:        C Multi-Threaded File Compression and Decompression Library
 
 License:        LGPLv3
-URL:            https://github.com/wanduow/wandio
-Source0:        https://github.com/wanduow/wandio/archive/%{version}.tar.gz
+URL:            https://github.com/LibtraceTeam/wandio
+Source0:        https://github.com/LibtraceTeam/wandio/archive/%{version}.tar.gz
 
 BuildRequires:  gcc
 BuildRequires:  gcc-c++
@@ -24,7 +24,7 @@ files. All compression-related operations are performed in a separate thread
 where possible resulting in significant performance gains for tasks where I/O
 is the limiting factor (most simple trace analysis tasks are I/O-limited).
 
-libwandio is developed by the WAND Network Research Group at Waikato
+libwandio was originally developed by the WAND Network Research Group at Waikato
 University, New Zealand.
 
 %package        devel
@@ -73,6 +73,9 @@ find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 %{_bindir}/wandiocat
 
 %changelog
+* Fri Oct 21 2022 Shane Alcock <shane@alcock.co.nz> - 4.2.4-1
+- New upstream release (4.2.4)
+
 * Thu May 14 2020 Shane Alcock <salcock@waikato.ac.nz> - 4.2.3-1
 - New upstream release (4.2.3)
 

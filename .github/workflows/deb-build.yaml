@@ -16,10 +16,9 @@ jobs:
          arch:
            - amd64
          target:
-           - "debian:stretch"
            - "debian:buster"
            - "debian:bullseye"
-           - "ubuntu:xenial"
+           - "ubuntu:jammy"
            - "ubuntu:bionic"
            - "ubuntu:focal"
 
@@ -40,7 +39,7 @@ jobs:
           export DIRNAME=`echo ${{ matrix.target }} | tr ':' '_'`
           ./run-tests.sh ${DIRNAME}
       - name: Publish packages to cloudsmith
-        uses: wanduow/action-cloudsmith-upload-packages@v1
+        uses: wandnz/action-cloudsmith-upload-packages@v1
         with:
           path: packages/
           repo: ${{ secrets.CLOUDSMITH_OWNER }}/libwandio
