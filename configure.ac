@@ -50,7 +50,7 @@ AC_CACHE_CHECK([whether the C++ compiler works],
 ])
 
 # Put all our automake definitions in config.h
-AM_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADERS([config.h])
 
 # Checks for C and C++ compilers
 AC_PROG_CC
@@ -76,7 +76,8 @@ AC_FUNC_REALLOC
 AC_C_CONST
 AC_C_BIGENDIAN
 AC_TYPE_SIZE_T
-AC_HEADER_TIME
+AC_CHECK_HEADERS_ONCE([sys/time.h])
+
 AC_SYS_LARGEFILE
 
 ADD_INCLS=""
@@ -96,7 +97,7 @@ gcc_PURE
 gcc_FORMAT
 
 # Check for libtool
-AC_PROG_LIBTOOL
+LT_INIT
 
 # Checks for library functions.
 AC_PROG_GCC_TRADITIONAL
@@ -107,8 +108,9 @@ AC_PROG_GCC_TRADITIONAL
 AC_CHECK_SIZEOF([long int])
 
 
-# Checks for header files.
-AC_HEADER_STDC
+AC_CHECK_INCLUDES_DEFAULT
+AC_PROG_EGREP
+
 AC_CHECK_HEADERS(stddef.h inttypes.h sys/prctl.h)
 
 # Checks for various "optional" libraries
@@ -124,7 +126,7 @@ fi
 LIBS=
 
 AC_ARG_WITH([bzip2],
-	AC_HELP_STRING([--with-bzip2], [build with support for bzip2 compressed files]))
+	AS_HELP_STRING([--with-bzip2],[build with support for bzip2 compressed files]))
 
 AS_IF([test "x$with_bzip2" != "xno"],
 	[
@@ -145,7 +147,7 @@ AS_IF([test "x$have_bzip" = "xyes"], [
 )
 
 AC_ARG_WITH([zlib],
-	AC_HELP_STRING([--with-zlib], [build with support for zlib compressed files]))
+	AS_HELP_STRING([--with-zlib],[build with support for zlib compressed files]))
 
 AS_IF([test "x$with_zlib" != "xno"],
 	[
@@ -167,7 +169,7 @@ AS_IF([test "x$have_zlib" = "xyes"], [
 )
 
 AC_ARG_WITH([lzo],
-	AC_HELP_STRING([--with-lzo], [build with support for writing lzo compressed files]))
+	AS_HELP_STRING([--with-lzo],[build with support for writing lzo compressed files]))
 
 AS_IF([test "x$with_lzo" != "xno"],
 	[
@@ -189,7 +191,7 @@ AS_IF([test "x$have_lzo" = "xyes"], [
 )
 
 AC_ARG_WITH([lzma],
-	AC_HELP_STRING([--with-lzma], [build with support for lzma compressed files]))
+	AS_HELP_STRING([--with-lzma],[build with support for lzma compressed files]))
 
 AS_IF([test "x$with_lzma" != "xno"],
 	[
@@ -211,7 +213,7 @@ AS_IF([test "x$have_lzma" = "xyes"], [
 )
 
 AC_ARG_WITH([zstd],
-	AC_HELP_STRING([--with-zstd], [build with support for zstd compressed files]))
+	AS_HELP_STRING([--with-zstd],[build with support for zstd compressed files]))
 
 AS_IF([test "x$with_zstd" != "xno"],
 	[
@@ -233,7 +235,7 @@ AS_IF([test "x$have_zstd" = "xyes"], [
 )
 
 AC_ARG_WITH([qatzip],
-	AC_HELP_STRING([--with-qatzip], [build with support for Intel QuickAssist compression]))
+	AS_HELP_STRING([--with-qatzip],[build with support for Intel QuickAssist compression]))
 
 AS_IF([test "x$with_qatzip" != "xno"],
 	[
@@ -255,7 +257,7 @@ AS_IF([test "x$have_qatzip" = "xyes"], [
 )
 
 AC_ARG_WITH([lz4],
-        AC_HELP_STRING([--with-lz4], [build with support for lz4 compressed files]))
+        AS_HELP_STRING([--with-lz4],[build with support for lz4 compressed files]))
 
 AS_IF([test "x$with_lz4" != "xno"],
         [
@@ -291,7 +293,7 @@ AS_IF([test "x$have_lz4f" = "xyes"], [
 )
 
 AC_ARG_WITH([http],
-        AC_HELP_STRING([--with-http], [build with support for reading files over http (using libcurl)]))
+        AS_HELP_STRING([--with-http],[build with support for reading files over http (using libcurl)]))
 
 AS_IF([test "x$with_http" != "xno"],
         [
