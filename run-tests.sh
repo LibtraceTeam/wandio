@@ -10,9 +10,7 @@ apt-get install -y curl apt-transport-https \
     ssl-cert ca-certificates gnupg lsb-release git
 apt-get upgrade -y
 
-echo "deb https://dl.bintray.com/wand/general $(lsb_release -sc) main" | tee -a /etc/apt/sources.list.d/wand.list
-
-curl --silent "https://bintray.com/user/downloadSubjectPublicKey?username=wand" | apt-key add -
+curl -1sLf 'https://dl.cloudsmith.io/public/wand/libwandio/cfg/setup/bash.deb.sh' | bash
 
 apt-get update
 

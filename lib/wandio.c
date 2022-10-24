@@ -55,6 +55,7 @@ int force_directio_read = 0;
 int use_autodetect = 1;
 unsigned int use_threads = -1;
 unsigned int max_buffers = 50;
+int loghttpservererrors = 1;
 
 uint64_t read_waits = 0;
 uint64_t write_waits = 0;
@@ -96,6 +97,8 @@ static void do_option(const char *option) {
         */
         else if (strcmp(option, "nothreads") == 0)
                 use_threads = 0;
+        else if (strcmp(option, "nologhttpservererrors") == 0)
+                loghttpservererrors = 0;
         else if (strcmp(option, "noautodetect") == 0)
                 use_autodetect = 0;
         else if (strncmp(option, "threads=", 8) == 0)
@@ -103,7 +106,7 @@ static void do_option(const char *option) {
         else if (strncmp(option, "buffers=", 8) == 0)
                 max_buffers = atoi(option + 8);
         else {
-                fprintf(stderr, "Unknown libwandioio debug option '%s'\n",
+                fprintf(stderr, "Unknown libwandio debug option '%s'\n",
                         option);
         }
 }
@@ -555,6 +558,7 @@ DLLEXPORT int wandio_detect_compression_type(const char *filename) {
                 if (strcmp(ptr, WANDIO_BZ2_SUFFIX) == 0) {
                         return WANDIO_COMPRESS_BZ2;
                 }
+                ptr = filename;
         }
 
         if (len >= strlen(WANDIO_LZMA_SUFFIX)) {
@@ -563,6 +567,7 @@ DLLEXPORT int wandio_detect_compression_type(const char *filename) {
                 if (strcmp(ptr, WANDIO_LZMA_SUFFIX) == 0) {
                         return WANDIO_COMPRESS_LZMA;
                 }
+                ptr = filename;
         }
 
         if (len >= strlen(WANDIO_LZO_SUFFIX)) {
@@ -571,6 +576,7 @@ DLLEXPORT int wandio_detect_compression_type(const char *filename) {
                 if (strcmp(ptr, WANDIO_LZO_SUFFIX) == 0) {
                         return WANDIO_COMPRESS_LZO;
                 }
+                ptr = filename;
         }
 
         if (len >= strlen(WANDIO_LZ4_SUFFIX)) {
@@ -579,6 +585,7 @@ DLLEXPORT int wandio_detect_compression_type(const char *filename) {
                 if (strcmp(ptr, WANDIO_LZ4_SUFFIX) == 0) {
                         return WANDIO_COMPRESS_LZ4;
                 }
+                ptr = filename;
         }
 
         if (len >= strlen(WANDIO_ZSTD_SUFFIX)) {
@@ -587,6 +594,7 @@ DLLEXPORT int wandio_detect_compression_type(const char *filename) {
                 if (strcmp(ptr, WANDIO_ZSTD_SUFFIX) == 0) {
                         return WANDIO_COMPRESS_ZSTD;
                 }
+                ptr = filename;
         }
 
         /* this is a suffix we don't know. don't compress */

@@ -1,3 +1,11 @@
+Version 4.2.4
+=============
+ * Debian packaging has been modernised (thanks to Perry Lorier)
+ * Fix curl handle leaking when re-attempting an HTTP request
+ * Fix bug in compression method detection based on the suffix of
+   an output filename
+ * Replace various outdated macros in configure scripts
+
 Version 4.2.3
 =============
 Thanks to Mingwei Zhang for some of the fixes in this release

@@ -42,6 +42,7 @@
 #include <unistd.h>
 #include "curl-helper.h"
 #include "wandio.h"
+#include "wandio_internal.h"
 
 /* Libwandio IO module implementing an HTTP reader (using libcurl)
  */
@@ -209,9 +210,21 @@ static int fill_buffer(io_t *io) {
           int msgq = 0;
           m = curl_multi_info_read(DATA(io)->multi, &msgq);
           if (m != NULL && m->data.result != CURLE_OK) {
+            struct timeval tv;
+            if (loghttpservererrors == 0) {
+                // server-side disconnects may not be helpful to log,
+                // especially if the client is going to retry
+                if (m->data.result == CURLE_PARTIAL_FILE) {
+                    return -1;
+                }
+                if (m->data.result == CURLE_RECV_ERROR) {
+                    return -1;
+                }
+            }
+            gettimeofday(&tv, NULL);
             // there was an error reading -- if this is the first
             // read, then the wandio_create call will fail.
-            fprintf(stderr, "HTTP ERROR: %s (%d)\n",
+            fprintf(stderr, "%u HTTP ERROR: %s (%d)\n", tv.tv_sec,
                     curl_easy_strerror(m->data.result),
                     m->data.result);
             return -1;
@@ -244,7 +257,7 @@ static int fill_buffer(io_t *io) {
 
 DLLEXPORT io_t *http_open_hdrs(const char *filename, char **hdrs, int hdrs_cnt)
 {
-        io_t *io = malloc(sizeof(io_t));
+        io_t *io = calloc(1, sizeof(io_t));
         if (!io)
                 return NULL;
         io->data = calloc(sizeof(struct http_t), 1);
@@ -256,6 +269,9 @@ DLLEXPORT io_t *http_open_hdrs(const char *filename, char **hdrs, int hdrs_cnt)
         /* set url */
         DATA(io)->url = filename;
         DATA(io)->total_length = -1;
+        DATA(io)->multi = NULL;
+        DATA(io)->curl = NULL;
+
         if (!init_io(io)) {
                 return NULL;
         }
@@ -288,6 +304,19 @@ io_t *init_io(io_t *io) {
         io->source = &http_source;
 
         curl_helper_safe_global_init();
+
+        // if we are being re-initialized, make sure we clean up
+        // any existing curl handles
+        if (DATA(io)->curl) {
+                if (DATA(io)->multi) {
+                        curl_multi_remove_handle(DATA(io)->multi,
+                                DATA(io)->curl);
+                }
+                curl_easy_cleanup(DATA(io)->curl);
+        }
+        if (DATA(io)->multi) {
+                curl_multi_cleanup(DATA(io)->multi);
+        }
 
         DATA(io)->multi = curl_multi_init();
         DATA(io)->curl = curl_easy_init();

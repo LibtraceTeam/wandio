@@ -18,9 +18,9 @@ jobs:
         target:
           - "centos:7"
           - "fedora:35"
-          - "fedora:34"
-          - "rockylinux:8.5"
-          - "almalinux:8.5"
+          - "fedora:36"
+          - "rockylinux:8.6"
+          - "rockylinux:9.0"
 
 
     steps:
@@ -40,7 +40,7 @@ jobs:
           export DIRNAME=`echo ${{ matrix.target }} | tr ':' '_'`
           ./run-tests-rpm.sh ${DIRNAME}
       - name: Publish packages to cloudsmith
-        uses: wanduow/action-cloudsmith-upload-packages@v1
+        uses: salcock/action-cloudsmith-upload-packages@v1.7
         with:
           path: packages/
           repo: ${{ secrets.CLOUDSMITH_OWNER }}/libwandio
