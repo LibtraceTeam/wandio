@@ -1,3 +1,10 @@
+libwandio1 (4.2.5-1) unstable; urgency=medium
+
+  * HTTP: disconnect the reader from server and return an error
+    if (next to) no data is received for a minute.
+
+ -- Shane Alcock <shane@alcock.co.nz>  Tue, 13 Jun 2023 16:19:40 +1300
+
 libwandio1 (4.2.4-1) unstable; urgency=medium
 
   * writing: fix bugs with compression method detection based on file
