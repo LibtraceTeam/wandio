@@ -17,6 +17,7 @@ jobs:
            - amd64
          target:
            - "debian:buster"
+           - "debian:bookworm"
            - "debian:bullseye"
            - "ubuntu:jammy"
            - "ubuntu:bionic"
