@@ -44,6 +44,7 @@ struct bz_t {
         int outoffset;
         io_t *parent;
         enum err_t err;
+        uint8_t streamopen;
 };
 
 extern io_source_t bz_source;
@@ -72,7 +73,7 @@ DLLEXPORT io_t *bz_open(io_t *parent) {
 
         BZ2_bzDecompressInit(&DATA(io)->strm, 0, /* Verbosity */
                              0);                 /* small */
-
+        DATA(io)->streamopen = 1;
         return io;
 }
 
@@ -114,7 +115,11 @@ static int64_t bz_read(io_t *io, void *buffer, int64_t len) {
                         DATA(io)->err = ERR_OK;
                         break;
                 case BZ_STREAM_END:
-                        DATA(io)->err = ERR_EOF;
+                        /* Stream is over, but there could be more stream to
+                         * follow (e.g. if the file was compressed by pbzip2)
+                         */
+                        BZ2_bzDecompressEnd(&DATA(io)->strm);
+                        BZ2_bzDecompressInit(&DATA(io)->strm, 0, 0);
                         break;
                 default:
                         errno = EIO;
@@ -126,7 +131,9 @@ static int64_t bz_read(io_t *io, void *buffer, int64_t len) {
 }
 
 static void bz_close(io_t *io) {
-        BZ2_bzDecompressEnd(&DATA(io)->strm);
+        if (DATA(io)->streamopen) {
+                BZ2_bzDecompressEnd(&DATA(io)->strm);
+        }
         wandio_destroy(DATA(io)->parent);
         free(io->data);
         free(io);
