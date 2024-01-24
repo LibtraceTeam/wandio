@@ -197,7 +197,7 @@ static int fill_buffer(io_t *io) {
                         // update file length.
                         double cl;
                         curl_easy_getinfo(DATA(io)->curl,
-                                          CURLINFO_CONTENT_LENGTH_DOWNLOAD,
+                                          CURLINFO_CONTENT_LENGTH_DOWNLOAD_T,
                                           &cl);
                         DATA(io)->total_length = (int64_t)cl;
                 }
