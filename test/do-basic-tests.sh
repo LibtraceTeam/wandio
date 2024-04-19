@@ -112,6 +112,9 @@ do_read_test gzip files/big.txt.gz
 echo -n \* Reading bzip2...
 do_read_test bzip2 files/big.txt.bz2
 
+echo -n \* Reading multi-stream bzip2...
+do_read_test bzip2 files/big.multistream.txt.bz2
+
 echo -n \* Reading lzma...
 do_read_test lzma files/big.txt.xz
 

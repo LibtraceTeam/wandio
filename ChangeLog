@@ -1,3 +1,8 @@
+Version 4.2.6
+=============
+ * Fix truncation bug when reading multi-stream bzip2 files.
+
+
 Version 4.2.5
 =============
  * HTTP: disconnect readers that are idle (or very slow) for

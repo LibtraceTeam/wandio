@@ -1,3 +1,9 @@
+libwandio1 (4.2.6-1) unstable; urgency=medium
+
+  * Fix truncation bug when reading multi-stream bzip2 files.
+
+ -- Shane Alcock <shane@alcock.co.nz>  Tue, 19 Sep 2023 11:44:19 +1200
+
 libwandio1 (4.2.5-1) unstable; urgency=medium
 
   * HTTP: disconnect the reader from server and return an error

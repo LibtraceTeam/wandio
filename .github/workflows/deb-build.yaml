@@ -20,7 +20,7 @@ jobs:
            - "debian:bookworm"
            - "debian:bullseye"
            - "ubuntu:jammy"
-           - "ubuntu:bionic"
+           - "ubuntu:noble"
            - "ubuntu:focal"
 
      steps:

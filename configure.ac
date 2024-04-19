@@ -3,7 +3,7 @@
 # Now you only need to update the version number in two places - below,
 # and in the README
 
-AC_INIT([wandio],[4.2.5],[shane@alcock.co.nz],[wandio])
+AC_INIT([wandio],[4.2.6],[shane@alcock.co.nz],[wandio])
 
 WANDIO_MAJOR=4
 WANDIO_MID=2
