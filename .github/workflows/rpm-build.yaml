@@ -16,11 +16,8 @@ jobs:
         arch:
           - amd64
         target:
-          - "fedora:39"
-          - "fedora:40"
           - "rockylinux:8"
           - "rockylinux:9"
-
 
     steps:
       - name: Checkout repo
