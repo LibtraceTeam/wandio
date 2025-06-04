@@ -19,7 +19,6 @@ jobs:
           - "rockylinux:8"
           - "rockylinux:9"
 
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -37,7 +36,7 @@ jobs:
           export DIRNAME=`echo ${{ matrix.target }} | tr ':' '_'`
           ./run-tests-rpm.sh ${DIRNAME}
       - name: Publish packages to cloudsmith
-        uses: salcock/action-cloudsmith-upload-packages@v1.7
+        uses: salcock/action-cloudsmith-upload-packages@v1.8
         with:
           path: packages/
           repo: ${{ secrets.CLOUDSMITH_OWNER }}/libwandio
