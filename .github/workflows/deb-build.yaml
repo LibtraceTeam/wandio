@@ -16,9 +16,9 @@ jobs:
          arch:
            - amd64
          target:
-           - "debian:buster"
            - "debian:bookworm"
            - "debian:bullseye"
+           - "debian:trixie"
            - "ubuntu:jammy"
            - "ubuntu:noble"
            - "ubuntu:focal"
