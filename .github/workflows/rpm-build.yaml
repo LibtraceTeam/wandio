@@ -16,8 +16,6 @@ jobs:
         arch:
           - amd64
         target:
-          - "fedora:39"
-          - "fedora:38"
           - "rockylinux:8"
           - "rockylinux:9"
 
