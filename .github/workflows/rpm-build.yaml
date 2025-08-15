@@ -16,8 +16,9 @@ jobs:
         arch:
           - amd64
         target:
-          - "rockylinux:8"
-          - "rockylinux:9"
+          - "almalinux:8"
+          - "almalinux:9"
+          - "almalinux:10"
 
     steps:
       - name: Checkout repo

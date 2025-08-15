@@ -17,11 +17,9 @@ jobs:
            - amd64
          target:
            - "debian:bookworm"
-           - "debian:bullseye"
            - "debian:trixie"
            - "ubuntu:jammy"
            - "ubuntu:noble"
-           - "ubuntu:focal"
 
      steps:
       - name: Checkout repo
