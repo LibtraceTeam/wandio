@@ -20,6 +20,7 @@ jobs:
            - "debian:trixie"
            - "ubuntu:jammy"
            - "ubuntu:noble"
+           - "ubuntu:resolute"
 
      steps:
       - name: Checkout repo
