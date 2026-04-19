@@ -16,12 +16,11 @@ jobs:
          arch:
            - amd64
          target:
-           - "debian:buster"
            - "debian:bookworm"
            - "debian:bullseye"
            - "ubuntu:jammy"
            - "ubuntu:noble"
-           - "ubuntu:focal"
+           - "ubuntu:resolute"
 
      steps:
       - name: Checkout repo
