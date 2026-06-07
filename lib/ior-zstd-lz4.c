@@ -174,13 +174,13 @@ static int64_t zstd_lz4_read(io_t *io, void *buffer, int64_t len) {
 
                 while (true) {
                         if (DATA(io)->dec == DEC_UNDEF) {
-                            int avail = DATA(io)->inbuf_len - DATA(io)->inbuf_index;
-                            if(avail < 4) {
-                                  /* Not enough bytes to identify the next frame. Break to the
-                                   * outer loop to refill the input buffer. */
-                                  break;                                
-                            }
-                            unsigned char *buf =
+                                int avail = DATA(io)->inbuf_len - DATA(io)->inbuf_index;
+                                if(avail < 4) {
+                                        /* Not enough bytes to identify the next frame. Break to the
+                                        * outer loop to refill the input buffer. */
+                                        break;                                
+                                }
+                                unsigned char *buf =
                                     (unsigned char *)(DATA(io)->inbuf +
                                                       DATA(io)->inbuf_index);
                                 if (((buf[0] & 0xf0) == 0x50) &&
