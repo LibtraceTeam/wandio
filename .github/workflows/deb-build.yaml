@@ -17,14 +17,14 @@ jobs:
            - amd64
          target:
            - "debian:bookworm"
-           - "debian:bullseye"
+           - "debian:trixie"
            - "ubuntu:jammy"
            - "ubuntu:noble"
            - "ubuntu:resolute"
 
      steps:
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Install prereq packages
         run: ./debpkg-setup.sh
       - name: Build packages
@@ -39,7 +39,7 @@ jobs:
           export DIRNAME=`echo ${{ matrix.target }} | tr ':' '_'`
           ./run-tests.sh ${DIRNAME}
       - name: Publish packages to cloudsmith
-        uses: wandnz/action-cloudsmith-upload-packages@v1.6
+        uses: wandnz/action-cloudsmith-upload-packages@v1.8
         with:
           path: packages/
           repo: ${{ secrets.CLOUDSMITH_OWNER }}/libwandio

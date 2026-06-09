@@ -15,7 +15,7 @@ curl -1sLf 'https://dl.cloudsmith.io/public/wand/libwandio/cfg/setup/bash.deb.sh
 apt-get update
 
 apt-get install -y devscripts equivs
-apt-get install -y zstd lzop xz-utils liblz4-tool
+apt-get install -y zstd lzop xz-utils lz4
 
 mk-build-deps --install --remove --tool "apt-get -o Debug::pkgProblemResolver=yes -y --no-install-recommends"
 

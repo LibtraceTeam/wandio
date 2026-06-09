@@ -174,11 +174,11 @@ static int64_t zstd_lz4_read(io_t *io, void *buffer, int64_t len) {
 
                 while (true) {
                         if (DATA(io)->dec == DEC_UNDEF) {
-                                if (len < 4) {
-                                        fprintf(stderr, "Invalid too short "
-                                                        "ZSTD/LJS frame\n");
-                                        errno = EIO;
-                                        return -1;
+                                int avail = DATA(io)->inbuf_len - DATA(io)->inbuf_index;
+                                if(avail < 4) {
+                                        /* Not enough bytes to identify the next frame. Break to the
+                                        * outer loop to refill the input buffer. */
+                                        break;                                
                                 }
                                 unsigned char *buf =
                                     (unsigned char *)(DATA(io)->inbuf +
@@ -203,7 +203,7 @@ static int64_t zstd_lz4_read(io_t *io, void *buffer, int64_t len) {
 #endif
                                 } else {
                                         fprintf(stderr,
-                                                "Unknown ZSTD/LJS frame \n");
+                                                "Unknown ZSTD/LZ4 frame \n");
                                         DATA(io)->dec = DEC_UNDEF;
                                         errno = EIO;
                                         return -1;
