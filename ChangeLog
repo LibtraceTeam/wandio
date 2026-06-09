@@ -1,3 +1,9 @@
+Version 4.2.7
+=============
+ * Fixed incorrect length check when reading zstd/lz4 (thanks to
+   @scherepanov for this bug fix)
+ * Replaced deprecated curl info constant with the new equivalent.
+
 Version 4.2.6
 =============
  * Fix truncation bug when reading multi-stream bzip2 files.
